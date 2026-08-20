@@ -1,0 +1,118 @@
+.experts-screen__content {
+  padding: 0 16px 20px;
+  margin-top: -30px;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.experts-screen__trust {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.experts-screen__trust-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.experts-screen__specialty-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.experts-screen__specialty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  text-align: left;
+}
+.experts-screen__specialty span { font-size: 1.5rem; }
+.experts-screen__specialty strong {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 0.86rem;
+  color: var(--heading-green);
+}
+.experts-screen__specialty p {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  line-height: 1.3;
+}
+
+.experts-screen__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.experts-screen__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.experts-screen__avatar {
+  width: 42px; height: 42px; flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--lavender);
+  color: var(--indigo-mid-deep);
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.experts-screen__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.experts-screen__info strong { font-size: 0.84rem; }
+.experts-screen__info span { font-size: 0.7rem; color: var(--ink-soft); }
+.experts-screen__rating {
+  display: flex; align-items: center; gap: 3px;
+  color: var(--marigold-deep) !important;
+  font-weight: 700;
+}
+
+.experts-screen__book {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.experts-screen__book span { font-size: 0.68rem; font-weight: 700; }
+.experts-screen__book .is-today { color: var(--online-dot); }
+.experts-screen__book .is-tomorrow { color: var(--marigold-deep); }
+.experts-screen__book small { font-size: 0.66rem; color: var(--ink-soft); }
+
+.experts-screen__book-btn {
+  background: var(--lavender);
+  color: var(--indigo-mid-deep);
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.experts-screen__quiz {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  background: var(--lavender-soft);
+  border-color: transparent;
+}
+.experts-screen__quiz strong { display: block; font-size: 0.86rem; }
+.experts-screen__quiz span { font-size: 0.74rem; color: var(--ink-soft); }

@@ -1,0 +1,29 @@
+.chat-embed {
+  height: 100%;
+  display: flex;
+}
+
+.chat-embed__frame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  height: 100%;
+}
+
+.chat-embed--empty {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.chat-embed--empty code {
+  background: var(--lavender-soft);
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: var(--indigo-mid-deep);
+  font-size: 0.82em;
+}

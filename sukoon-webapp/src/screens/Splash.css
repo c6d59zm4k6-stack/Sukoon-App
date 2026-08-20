@@ -1,0 +1,134 @@
+.splash {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  color: #fff;
+}
+
+.splash__art {
+  position: absolute;
+  inset: 0;
+  background: url("/brand/sukoon-header-art.webp") center 30% / cover no-repeat;
+  z-index: 0;
+}
+
+.splash__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(35,49,92,0.15) 0%, rgba(35,49,92,0.55) 55%, rgba(23,20,46,0.92) 100%);
+  z-index: 1;
+}
+
+.splash__content {
+  position: relative;
+  z-index: 2;
+  padding: calc(48px + env(safe-area-inset-top)) 24px 0;
+  text-align: center;
+}
+
+.splash__mascot {
+  width: 96px;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.25));
+}
+
+.splash__wordmark {
+  font-size: 2.4rem;
+  color: #fff;
+  margin: 10px 0 0;
+}
+
+.splash__tagline {
+  margin: 6px 0 0;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+}
+
+.splash__features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 28px 0 0;
+}
+
+.splash__feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.92);
+}
+
+.splash__feature-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.16);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.splash__footer {
+  position: relative;
+  z-index: 2;
+  padding: 20px 24px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+}
+
+.splash__cta {
+  width: 100%;
+  background: var(--indigo-mid);
+}
+
+.splash__account {
+  margin: 16px 0 0;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.85);
+}
+
+.splash__link {
+  color: var(--lavender);
+  font-weight: 700;
+}
+
+.splash__divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.6);
+}
+.splash__divider::before, .splash__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.2);
+}
+
+.splash__social {
+  display: flex;
+  gap: 12px;
+}
+
+.splash__social-btn {
+  flex: 1;
+  background: rgba(255,255,255,0.92);
+  color: var(--ink);
+  font-weight: 700;
+  padding: 12px;
+  border-radius: 999px;
+}
+
+.splash__secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 18px 0 0;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.6);
+}

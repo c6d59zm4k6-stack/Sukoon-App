@@ -1,0 +1,35 @@
+/* Ported 1:1 from the chat app's :root block so the two never drift visually. */
+:root {
+  --ink: #2E3357;
+  --ink-soft: #5C6485;
+  --mist: #FCFBF9;
+  --paper: #EDE7F9;
+  --indigo-deep: #23315C;
+  --indigo-mid: #5B54A6;
+  --indigo-mid-deep: #403A7A;
+  --marigold: #E8A15E;
+  --marigold-deep: #C97A3D;
+  --dawn-pink: #EDAA9C;
+  --glow-gold: #FFD9A0;
+  --sage: #AEAD97;
+  --sage-soft: #EFEBDD;
+  --clay: #C9785D;
+  --clay-soft: #F3E1D6;
+  --border: #E9E6DE;
+  --radius: 18px;
+  --heading-green: #23315C;
+  --user-bubble: #D9E6F7;
+  --user-bubble-text: #23315C;
+  --avatar-tan: #F0D7B6;
+  --avatar-ring: #EDE9FB;
+  --online-dot: #5FA86F;
+  --lavender-soft: #EDE7F9;
+  --lavender: #C9B8E8;
+  --leaf: #5E9C5B;
+
+  /* New tokens needed for screens outside the chat app, derived from the same family */
+  --card-shadow: 0 10px 30px rgba(46, 51, 87, 0.08);
+  --card-shadow-lg: 0 14px 40px rgba(46, 51, 87, 0.14);
+  --nav-height: 64px;
+  --app-max-width: 560px;
+}

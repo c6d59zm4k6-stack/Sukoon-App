@@ -1,0 +1,50 @@
+.home-screen__content {
+  padding: 0 16px 20px;
+  margin-top: -30px;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.home-screen__domain-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.home-screen__domain {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+}
+
+.home-screen__domain span { font-size: 1.6rem; }
+.home-screen__domain strong {
+  font-size: 0.85rem;
+  font-family: "Baloo 2", sans-serif;
+  color: var(--heading-green);
+}
+
+.home-screen__experts-banner {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--lavender-soft);
+  border-color: transparent;
+  text-align: left;
+}
+
+.home-screen__experts-banner strong {
+  display: block;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+.home-screen__experts-banner span {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+}

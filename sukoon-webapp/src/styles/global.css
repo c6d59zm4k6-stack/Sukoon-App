@@ -1,0 +1,97 @@
+@import "./tokens.css";
+
+*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--mist);
+  font-family: "Nunito", sans-serif;
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3, .display {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 700;
+  color: var(--heading-green);
+  margin: 0;
+}
+
+button, input, select, textarea { font-family: inherit; }
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+a { color: inherit; }
+
+#root {
+  height: 100%;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: var(--app-max-width);
+  margin: 0 auto;
+  background: var(--mist);
+  position: relative;
+  overflow: hidden;
+}
+
+.app-shell__body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom));
+}
+
+.pill-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 14px 20px;
+  font-weight: 700;
+  font-size: 1rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pill-button--primary {
+  background: var(--indigo-mid);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(91, 84, 166, 0.35);
+}
+.pill-button--primary:active { transform: scale(0.98); }
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  padding: 16px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--indigo-mid);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
