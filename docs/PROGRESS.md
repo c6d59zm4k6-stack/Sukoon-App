@@ -74,7 +74,7 @@ Compare `reference-screenshots/` vs `current-build-screenshots/` for each.
 
 | Screen | File(s) | Status |
 |---|---|---|
-| Start (splash) | `src/screens/Splash.jsx/.css` | **Furthest from reference.** Human said current version "isn't even close." Reference has a warm sunrise scene with a woman meditating (journal, lantern, plant) — that illustration was never provided as an asset, so the current version approximates with a dark gradient over the mountain header art instead. This is the human's requested starting point for the next round of polish. |
+| Start (splash) | `src/screens/Splash.jsx/.css` | **Rebuilt to match reference (2026-08-20).** The sunrise/meditation scene now comes from `docs/reference-screenshots/01-start.png` itself: the mockup's baked-in text/UI band was cropped out (kept only the mountains/river/forest/temple/woman/journal/lantern illustration, y670–1290 of the source PNG), the top edge feathered to alpha so it blends into a CSS sky gradient, and the result exported to `sukoon-webapp/public/brand/sukoon-splash-scene.webp` (~78KB). `Splash.css`'s `.splash__art` sizes it via `aspect-ratio: 852/620` at `width:100%` so it renders uncropped at the phone-frame width (`--app-max-width: 560px`) and degrades gracefully on shorter/taller viewports. Verified in-browser at mobile (375×812, 375×667) and tablet-frame widths. |
 | Onboarding — Choose Journey | `src/screens/onboarding/ChooseJourney.jsx/.css` | Close to reference, minor polish possible |
 | Onboarding — About You | `src/screens/onboarding/AboutYou.jsx/.css` | Close to reference |
 | Home | `src/screens/Home.jsx/.css` | First-pass; not directly based on a reference screenshot (none was provided for Home specifically) — built from the product brief instead |
@@ -93,12 +93,10 @@ Compare `reference-screenshots/` vs `current-build-screenshots/` for each.
 
 ## Suggested next steps, in order
 
-1. Rebuild the **Start/splash screen** — this is where the human wants to
-   resume. It needs to feel much closer to `reference-screenshots/01-start.png`.
-   No matching illustration asset exists; either ask the human for one,
-   generate/commission an equivalent, or get the gradient/mood closer
-   using only the existing header art.
-2. Then proceed screen-by-screen in the order above, using each
+1. ~~Rebuild the **Start/splash screen**~~ — done 2026-08-20, see status
+   table above. Worth a final human eyeball against
+   `reference-screenshots/01-start.png` before moving on.
+2. Proceed screen-by-screen in the order above, using each
    reference screenshot as the target.
 3. Home, Track, and Profile have no reference screenshots — flag this to
    the human rather than assuming the first-pass version is "done."
@@ -109,4 +107,5 @@ Compare `reference-screenshots/` vs `current-build-screenshots/` for each.
 
 - Dark mode for the Plan screen (shown in reference but not yet built)
 - Whether Home and Track need their own reference designs from the human
-- Whether the splash illustration will be human-provided or AI-generated
+- Splash illustration source is resolved (cropped from the reference
+  screenshot itself, see status table) — no longer open.

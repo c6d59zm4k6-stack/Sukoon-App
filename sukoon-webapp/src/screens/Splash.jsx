@@ -11,6 +11,7 @@ const FEATURES = [
 export default function Splash({ onBegin, onCreateAccount }) {
   return (
     <div className="splash">
+      <div className="splash__sky" aria-hidden="true" />
       <div className="splash__art" aria-hidden="true" />
       <div className="splash__gradient" aria-hidden="true" />
 

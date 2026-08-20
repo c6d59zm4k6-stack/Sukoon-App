@@ -8,23 +8,42 @@
   color: #fff;
 }
 
-.splash__art {
+.splash__sky {
   position: absolute;
   inset: 0;
-  background: url("/brand/sukoon-header-art.webp") center 30% / cover no-repeat;
+  background: linear-gradient(
+    180deg,
+    #231343 0%,
+    #6c4a97 16%,
+    #a67fb8 30%,
+    #eec9bd 44%,
+    #dcaebb 56%,
+    #b494bc 66%,
+    #9b83b3 100%
+  );
   z-index: 0;
+}
+
+.splash__art {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 34%;
+  aspect-ratio: 852 / 620;
+  background: url("/brand/sukoon-splash-scene.webp") center / cover no-repeat;
+  z-index: 1;
 }
 
 .splash__gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(35,49,92,0.15) 0%, rgba(35,49,92,0.55) 55%, rgba(23,20,46,0.92) 100%);
-  z-index: 1;
+  background: linear-gradient(180deg, rgba(35,49,92,0.08) 0%, rgba(35,49,92,0.32) 48%, rgba(30,26,64,0.72) 68%, rgba(20,17,46,0.94) 84%, rgba(16,14,38,0.97) 100%);
+  z-index: 2;
 }
 
 .splash__content {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   padding: calc(48px + env(safe-area-inset-top)) 24px 0;
   text-align: center;
 }
@@ -73,7 +92,7 @@
 
 .splash__footer {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   padding: 20px 24px calc(24px + env(safe-area-inset-bottom));
   text-align: center;
 }

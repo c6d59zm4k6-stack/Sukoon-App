@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sukoon-webapp",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "sukoon-webapp", "run", "dev"],
+      "port": 5173
+    }
+  ]
+}
