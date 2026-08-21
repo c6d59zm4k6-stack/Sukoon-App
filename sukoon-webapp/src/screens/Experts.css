@@ -102,18 +102,23 @@
   flex-shrink: 0;
 }
 
-.experts-screen__city-row {
+.experts-screen__clinic {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.experts-screen__clinic,
+.experts-screen__clinic-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .experts-screen__online {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-bottom: 12px;
 }
 
 .experts-screen__clinic-icon {
@@ -133,8 +138,14 @@
 .experts-screen__clinic-text strong { font-size: 0.86rem; color: var(--ink); }
 .experts-screen__clinic-text span { font-size: 0.74rem; color: var(--ink-soft); }
 
-.experts-screen__online {
-  margin-bottom: 12px;
+.experts-screen__clinic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.experts-screen__clinic-cta {
+  width: 100%;
 }
 
 .experts-screen__slot-row {
@@ -143,16 +154,43 @@
   gap: 8px;
 }
 
-.experts-screen__list {
+.experts-screen__doctor-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+}
+
+.experts-screen__doctor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .experts-screen__row {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.experts-screen__connect-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.experts-screen__connect-pill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--indigo-mid-deep);
+  background: var(--lavender-soft);
+  padding: 6px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .experts-screen__avatar {

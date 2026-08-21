@@ -41,14 +41,14 @@
 }
 
 .journey-card__soon {
-  position: absolute;
-  bottom: 10px; right: 10px;
+  align-self: flex-start;
   font-size: 0.62rem;
   font-weight: 700;
   color: var(--ink-soft);
   background: var(--border);
   padding: 2px 8px;
   border-radius: 999px;
+  margin-top: 2px;
 }
 
 .journey-card__check {

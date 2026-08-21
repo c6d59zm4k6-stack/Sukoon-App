@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, Clock, Lock, Video, Star, Sparkles, MapPin, Users, CheckCircle2, X } from "lucide-react";
+import { ShieldCheck, Clock, Lock, Video, Star, Sparkles, MapPin, Phone, Users, CheckCircle2, X } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import "./Experts.css";
 
@@ -23,11 +23,22 @@ const EXPERTS = [
   { name: "Priyanka Dey", role: "Nutritionist", specialties: ["nutrition"], rating: "4.8 (88)", avail: "Available tomorrow", time: "11:00 AM" },
 ];
 
-const CLINICS = [
-  { id: "mumbai", city: "Mumbai", name: "Sukoon Wellness Clinic", address: "Bandra West, Mumbai", hours: "9 AM – 7 PM" },
-  { id: "delhi", city: "Delhi", name: "Sukoon Wellness Clinic", address: "Saket, New Delhi", hours: "10 AM – 6 PM" },
-  { id: "bangalore", city: "Bangalore", name: "Sukoon Wellness Clinic", address: "Indiranagar, Bangalore", hours: "9 AM – 6 PM" },
-];
+// Real single location for now — phone left blank until the human provides
+// one (the "Call" option only renders once CLINIC.phone is set).
+const CLINIC = {
+  name: "Woodhouse Healthcare Speciality Clinic",
+  address: "Nehru Chowk, Bhopal",
+  hours: "9 AM – 7 PM",
+  phone: "9109698953",
+};
+
+function clinicMapsUrl() {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CLINIC.name + ", " + CLINIC.address)}`;
+}
+
+function formatPhone(phone) {
+  return `+91 ${phone.slice(0, 5)} ${phone.slice(5)}`;
+}
 
 const ONLINE_SLOTS = ["Today, 4:00 PM", "Tomorrow, 10:00 AM", "Tomorrow, 2:00 PM"];
 
@@ -40,11 +51,9 @@ const BROWSE_MODES = [
 export default function Experts({ onBack }) {
   const [specialty, setSpecialty] = useState(null);
   const [mode, setMode] = useState("doctor");
-  const [city, setCity] = useState(CLINICS[0].id);
   const [confirmation, setConfirmation] = useState(null);
 
   const matchingExperts = specialty ? EXPERTS.filter((e) => e.specialties.includes(specialty)) : EXPERTS;
-  const selectedClinic = CLINICS.find((c) => c.id === city);
   const specialtyTitle = SPECIALTIES.find((s) => s.id === specialty)?.title;
 
   const selectSpecialty = (id) => {
@@ -115,24 +124,42 @@ export default function Experts({ onBack }) {
               <h2 className="section-title">{specialty ? `${specialtyTitle} experts` : "Top experts in your area"}</h2>
               <button className="link-btn">See all</button>
             </div>
-            <div className="card experts-screen__list">
+            <div className="experts-screen__doctor-list">
               {matchingExperts.map((e) => (
-                <div className="experts-screen__row" key={e.name}>
-                  <div className="experts-screen__avatar">{e.name.split(" ")[1]?.[0] ?? e.name[0]}</div>
-                  <div className="experts-screen__info">
-                    <strong>{e.name}</strong>
-                    <span>{e.role}</span>
-                    <span className="experts-screen__rating"><Star size={12} fill="currentColor" /> {e.rating}</span>
+                <div className="card experts-screen__doctor" key={e.name}>
+                  <div className="experts-screen__row">
+                    <div className="experts-screen__avatar">{e.name.split(" ")[1]?.[0] ?? e.name[0]}</div>
+                    <div className="experts-screen__info">
+                      <strong>{e.name}</strong>
+                      <span>{e.role}</span>
+                      <span className="experts-screen__rating"><Star size={12} fill="currentColor" /> {e.rating}</span>
+                    </div>
+                    <div className="experts-screen__book">
+                      <span className={e.avail.includes("today") ? "is-today" : "is-tomorrow"}>{e.avail}</span>
+                      <small>{e.time}</small>
+                    </div>
                   </div>
-                  <div className="experts-screen__book">
-                    <span className={e.avail.includes("today") ? "is-today" : "is-tomorrow"}>{e.avail}</span>
-                    <small>{e.time}</small>
-                    <button
-                      className="experts-screen__book-btn"
-                      onClick={() => setConfirmation(`Request sent to ${e.name}. Our team will confirm your slot shortly.`)}
+                  <div className="experts-screen__connect-row">
+                    <a
+                      className="experts-screen__connect-pill"
+                      href={clinicMapsUrl()}
+                      target="_blank"
+                      rel="noreferrer"
                     >
-                      Book
+                      <MapPin size={13} /> {CLINIC.name}
+                    </a>
+                    <button
+                      type="button"
+                      className="experts-screen__connect-pill"
+                      onClick={() => setConfirmation(`Online consultation requested with ${e.name}. We'll send you the video link shortly.`)}
+                    >
+                      <Video size={13} /> Online
                     </button>
+                    {CLINIC.phone && (
+                      <a className="experts-screen__connect-pill" href={`tel:+91${CLINIC.phone}`}>
+                        <Phone size={13} /> Call
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}
@@ -143,33 +170,37 @@ export default function Experts({ onBack }) {
         {specialty && mode === "clinic" && (
           <section>
             <h2 className="section-title">Visit a clinic</h2>
-            <div className="experts-screen__city-row">
-              {CLINICS.map((c) => (
-                <button
-                  key={c.id}
-                  className={"chip" + (city === c.id ? " is-active" : "")}
-                  onClick={() => setCity(c.id)}
-                >
-                  {c.city}
-                </button>
-              ))}
-            </div>
-            {selectedClinic && (
-              <div className="card experts-screen__clinic">
+            <div className="card experts-screen__clinic">
+              <div className="experts-screen__clinic-header">
                 <span className="experts-screen__clinic-icon"><MapPin size={20} /></span>
                 <div className="experts-screen__clinic-text">
-                  <strong>{selectedClinic.name}</strong>
-                  <span>{selectedClinic.address}</span>
-                  <span>{selectedClinic.hours}</span>
+                  <strong>{CLINIC.name}</strong>
+                  <span>{CLINIC.address}</span>
+                  <span>{CLINIC.hours}</span>
                 </div>
-                <button
-                  className="experts-screen__book-btn"
-                  onClick={() => setConfirmation(`Got it — the ${selectedClinic.city} clinic. Our team will call you to confirm a slot.`)}
-                >
-                  Choose
-                </button>
               </div>
-            )}
+              <div className="experts-screen__clinic-actions">
+                <a
+                  className="experts-screen__connect-pill"
+                  href={clinicMapsUrl()}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <MapPin size={13} /> Directions
+                </a>
+                {CLINIC.phone && (
+                  <a className="experts-screen__connect-pill" href={`tel:+91${CLINIC.phone}`}>
+                    <Phone size={13} /> {formatPhone(CLINIC.phone)}
+                  </a>
+                )}
+              </div>
+              <button
+                className="experts-screen__book-btn experts-screen__clinic-cta"
+                onClick={() => setConfirmation(`Got it — ${CLINIC.name}. Our team will call you to confirm a slot.`)}
+              >
+                Book at this clinic
+              </button>
+            </div>
           </section>
         )}
 

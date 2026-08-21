@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Heart, Bell, ChevronDown, Salad, Droplet, Footprints, Brain, Download, MessageCircle, Mail } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
-import { downloadPlanPdf } from "../utils/downloadPlanPdf.js";
+import { downloadPlanPdf } from "../utils/planPdf.js";
 import { buildReportSummaryText } from "../data/planReport.js";
 import "./Plan.css";
 
