@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, Clock, Lock, Video, Star, Sparkles, MapPin, Phone, Users, CheckCircle2, X } from "lucide-react";
+import { ShieldCheck, Clock, Lock, Video, Star, Cloud, MapPin, Phone, Users, CheckCircle2, X } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import "./Experts.css";
 
@@ -120,10 +120,7 @@ export default function Experts({ onBack }) {
 
         {(!specialty || mode === "doctor") && (
           <section>
-            <div className="section-title-row">
-              <h2 className="section-title">{specialty ? `${specialtyTitle} experts` : "Top experts in your area"}</h2>
-              <button className="link-btn">See all</button>
-            </div>
+            <h2 className="section-title">{specialty ? `${specialtyTitle} experts` : "Top experts in your area"}</h2>
             <div className="experts-screen__doctor-list">
               {matchingExperts.map((e) => (
                 <div className="card experts-screen__doctor" key={e.name}>
@@ -229,7 +226,7 @@ export default function Experts({ onBack }) {
         )}
 
         <button className="card experts-screen__quiz">
-          <Sparkles size={20} color="var(--indigo-mid)" />
+          <Cloud size={20} color="var(--indigo-mid)" />
           <div>
             <strong>Not sure whom to consult?</strong>
             <span>Take a quick assessment and we'll find the right expert.</span>
