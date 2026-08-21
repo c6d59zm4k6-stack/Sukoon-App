@@ -59,6 +59,10 @@ export function mapAiPlanToAppPlan(aiPlan) {
     movementNote: aiPlan.movementNote || "",
     clinicianNote: aiPlan.clinicianNote || "",
     timeline: aiPlan.timeline || [],
+    // Full, un-flattened AI output (profile/tests/plate/movement/clinician/
+    // timeline) — kept as-is so the original report can be rendered/exported
+    // faithfully instead of reconstructed from the flattened phase actions.
+    raw: aiPlan,
   };
 }
 

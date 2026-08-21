@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Heart, Bell, ChevronDown, Salad, Droplet, Footprints, Brain } from "lucide-react";
+import { Heart, Bell, ChevronDown, Salad, Droplet, Footprints, Brain, Download, MessageCircle, Mail } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
+import { downloadPlanPdf } from "../utils/downloadPlanPdf.js";
+import { buildReportSummaryText } from "../data/planReport.js";
 import "./Plan.css";
 
 const DAILY_PROGRESS = [
@@ -23,9 +25,23 @@ export default function Plan({ profile }) {
   const phases = profile?.plan?.phases ?? [];
   const typeProfile = profile?.plan?.typeProfile;
   const tests = profile?.plan?.tests ?? [];
+  const hasFullReport = Boolean(profile?.plan?.raw);
   const [expandedId, setExpandedId] = useState(
     () => phases.find((p) => p.status === "current")?.id
   );
+
+  const handleDownload = () => downloadPlanPdf(profile);
+
+  const handleWhatsApp = () => {
+    const text = buildReportSummaryText(profile) + "\n\n(I've downloaded the full PDF — attaching it here.)";
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const handleEmail = () => {
+    const subject = `${profile?.name ? profile.name + "'s" : "My"} Sukoon Health Plan`;
+    const body = buildReportSummaryText(profile) + "\n\n(Remember to attach the downloaded PDF before sending.)";
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  };
 
   return (
     <div className="plan-screen">
@@ -116,6 +132,26 @@ export default function Plan({ profile }) {
                   </span>
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {hasFullReport && (
+          <section>
+            <h2 className="section-title">Your Full Report</h2>
+            <div className="card plan-screen__report">
+              <p>Download your complete plan, or share it with someone you trust.</p>
+              <div className="plan-screen__report-actions">
+                <button type="button" onClick={handleDownload}>
+                  <Download size={16} /> Download PDF
+                </button>
+                <button type="button" onClick={handleWhatsApp}>
+                  <MessageCircle size={16} /> WhatsApp
+                </button>
+                <button type="button" onClick={handleEmail}>
+                  <Mail size={16} /> Email
+                </button>
+              </div>
             </div>
           </section>
         )}

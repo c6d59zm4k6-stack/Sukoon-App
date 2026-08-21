@@ -10,6 +10,7 @@ import Track from "./screens/Track.jsx";
 import Experts from "./screens/Experts.jsx";
 import Profile from "./screens/Profile.jsx";
 import ChatEmbed from "./screens/ChatEmbed.jsx";
+import { buildPlan as buildFallbackPlan } from "./data/planTemplates.js";
 
 const EMPTY_PLAN = { phases: [], answers: {} };
 
@@ -52,6 +53,14 @@ export default function App() {
           onContinue={(journeyIds) => {
             setProfile((p) => ({ ...p, journeys: journeyIds }));
             setStage("plan-quiz");
+          }}
+          onSkip={() => {
+            setProfile((p) => ({
+              ...p,
+              journeys: p.journeys.length ? p.journeys : ["pcos"],
+              plan: buildFallbackPlan(p.journeys.length ? p.journeys : ["pcos"], {}),
+            }));
+            setStage("app");
           }}
         />
       </div>

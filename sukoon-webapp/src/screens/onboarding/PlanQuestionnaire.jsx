@@ -123,11 +123,9 @@ export default function PlanQuestionnaire({ profile, onBack, onContinue }) {
 
       {!readyPlan && (
         <div className="plan-quiz__footer">
-          {error && (
-            <button type="button" className="plan-quiz__skip" onClick={skipToFallback}>
-              Skip for now, use a starter plan instead
-            </button>
-          )}
+          <button type="button" className="plan-quiz__skip" onClick={skipToFallback}>
+            {error ? "Skip for now, use a starter plan instead" : "Skip for now, take me to the app"}
+          </button>
           {quickReplies.length > 0 && !loading && (
             <div className="chip-row plan-quiz__quick-replies">
               {quickReplies.map((option) => (

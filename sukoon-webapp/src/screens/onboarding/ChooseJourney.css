@@ -35,6 +35,22 @@
   box-shadow: var(--card-shadow-lg);
 }
 
+.journey-card.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.journey-card__soon {
+  position: absolute;
+  bottom: 10px; right: 10px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  background: var(--border);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
 .journey-card__check {
   position: absolute;
   top: 10px; right: 10px;
@@ -81,6 +97,16 @@
 
 .choose-journey__cta:disabled {
   opacity: 0.45;
+}
+
+.choose-journey__skip {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--indigo-mid);
+  margin-top: 10px;
 }
 
 .choose-journey__note {
