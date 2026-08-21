@@ -58,11 +58,21 @@ per the human ("navigation seems to be working").
 - **Plain CSS over Tailwind**, using the ported token variables, to match
   the bespoke illustrated aesthetic without fighting a utility system.
 - **No router library** — navigation is plain React state
-  (`App.jsx`: `stage` for onboarding, `tab` for the bottom nav). Fine at
-  this scale (5 tabs + 2 onboarding steps + splash).
-- **Bottom nav = Home · Plan · Track · Chat · You** (5 tabs). "Talk to
-  Experts" is NOT its own tab — it's reached from Home (see
-  `homeView` state in `App.jsx`). Confirmed with the human.
+  (`App.jsx`: `stage` for onboarding, `tab` for the bottom nav).
+- **Bottom nav = Home · Plan · Track · Care · Sukoon · You** (6 tabs, as of
+  2026-08-21 — was 5, see the big restructure noted in the status table and
+  Navigation section below). "Care" is `Experts.jsx`, promoted to a
+  top-level tab; it used to be reached only from a Home banner via a
+  separate `homeView` state, which no longer exists. "Sukoon" is
+  `ChatEmbed.jsx`, renamed from "Chat" at the human's request — still just
+  the iframe, only the label changed.
+- **Onboarding = Splash → About You → Choose Journey → Plan Questionnaire →
+  main app** (4 steps, was 3 before the questionnaire was added — see
+  status table). `App.jsx` carries a `profile` state object (name, gender,
+  age, tags, location, chosen `journeys`, quiz `answers`, generated
+  `plan`) threaded down as a prop to `Home`/`Plan`/`Profile`. This didn't
+  exist before 2026-08-21 — `AboutYou`'s and `ChooseJourney`'s answers used
+  to be silently discarded by `App.jsx`.
 - App name is **Sukoon**; the chat tab itself is just labeled **Chat**
   (this was a naming correction partway through — Sukoon used to refer
   to the chat app specifically, now it's the whole product).
@@ -80,13 +90,14 @@ A second same-day follow-up caught real regressions from that pass. The human re
 
 A **third** same-day round: the human felt the opaque pill hid the sun completely and asked to go back to shadow-only text for the title (explicitly accepting the contrast trade-off — "maybe it's ok"), plus wanted the tagline repositioned so the sun stays mostly visible through it. Reverting the wordmark's chip surfaced a real, previously-masked layout bug: `.splash__mascot` (an `<img>`, inline by default) and `.splash__wordmark` (`display:inline-block`) were **inline siblings on the same line**, not stacked — they had only ever appeared correctly stacked because the wordmark (padded pill, or later a wide flex row) was wide enough to force a wrap. Once the wordmark got narrower, they fit side-by-side and the mascot visibly drifted left. Fixed properly rather than relying on wrap-coincidence again: `.splash__mascot` is now `display:block; margin:0 auto`, `.splash__wordmark` is `display:flex; justify-content:center` (guaranteed own line, full width) wrapping a new inner `.splash__wordmark-inner` span that does the old shrink-to-fit/badge-anchor job, and `.splash__tagline` is `display:block; width:fit-content; margin:auto`. Re-measured: mascot/wordmark-text/tagline all land at exactly 187.5px center on a 375px viewport. For the sun: the wordmark reverted to shadow-only text per the human's explicit request (contrast is knowingly below WCAG at this position — ~1.77:1 against a 3:1 requirement, sun now fully visible through/around it); the tagline kept a much lighter frosted chip, tuned by iterating its alpha against the same live contrast script — 0.58 opacity lands at 5.08:1 (passes 4.5:1) while still letting most of the sun's glow show through, versus the earlier fully-opaque 0.68 that blocked it outright. Re-verified at 375×812, 375×667, and a clean `npm run build`. |
 | Onboarding — About You | `src/screens/onboarding/AboutYou.jsx/.css` | **Re-verified live 2026-08-21; one real bug fixed; now the 1st onboarding step.** Human asked to swap the onboarding order — name/info now comes before journey selection (see `App.jsx` stage order below). The Age field also rendered both the native `<select>`'s OS dropdown arrow and a custom `ChevronDown` icon stacked next to each other (no `appearance: none` on the `<select>`) — fixed in `AboutYou.css`. Otherwise close to reference; same emoji-vs-illustrated-icon gap as Choose Journey applies to the "Anything we should know?" tag icons (reference has small icons per tag, e.g. droplet/clipboard/moon; this build has plain text chips). |
-| Onboarding — Choose Journey | `src/screens/onboarding/ChooseJourney.jsx/.css` | **Re-verified live 2026-08-21; now the 2nd onboarding step** (was 1st — human asked to swap it with About You). Genuinely close to reference: layout, selection state (card tint + purple border + filled checkmark), and the Continue button's enabled/disabled treatment all match. Only visible gap is icon style — reference uses custom painterly illustrations per category (uterus, lotus, brain, nuts bowl, yoga mat, stethoscope), this build uses plain OS emoji instead. Same asset problem as the splash mascot/hero photo — would need real icon files, not something to fake. Left as-is; flag to human if custom icons matter enough to source. |
-| Home | `src/screens/Home.jsx/.css` | First-pass; not directly based on a reference screenshot (none was provided for Home specifically) — built from the product brief instead |
-| Plan | `src/screens/Plan.jsx/.css` | Close to reference (light mode only was built; reference also showed a dark-mode variant, not yet addressed) |
-| Track | `src/screens/Track.jsx/.css` | First-pass; no reference screenshot was provided for this screen either |
-| Talk to Experts | `src/screens/Experts.jsx/.css` | Close to reference. **Navigation bug fixed 2026-08-21:** this screen had no way back to Home at all — `TopBar`'s menu icon has never been wired to anything anywhere in the app, and `Experts.jsx` didn't accept a back handler, so the only escape was re-tapping the Home tab. `TopBar` now accepts an optional `onBack` prop that swaps the hamburger icon for a `ChevronLeft` back button when provided; `App.jsx` passes `onBack={() => setHomeView("home")}` when rendering `Experts`. Verified live: back button now returns to Home correctly. |
-| Profile ("You") | `src/screens/Profile.jsx/.css` | First-pass; no reference screenshot provided |
-| Chat | `src/screens/ChatEmbed.jsx/.css` | Just an iframe wrapper — the actual UI is the untouched chat app |
+| Onboarding — Choose Journey | `src/screens/onboarding/ChooseJourney.jsx/.css` | **Re-verified live 2026-08-21; now the 2nd onboarding step** (was 1st — human asked to swap it with About You). Genuinely close to reference: layout, selection state (card tint + purple border + filled checkmark), and the Continue button's enabled/disabled treatment all match. Only visible gap is icon style — reference uses custom painterly illustrations per category (uterus, lotus, brain, nuts bowl, yoga mat, stethoscope), this build uses plain OS emoji instead. Same asset problem as the splash mascot/hero photo — would need real icon files, not something to fake. Left as-is; flag to human if custom icons matter enough to source. `JOURNEYS` (id/emoji/title/desc) was lifted out of this file into `src/data/journeys.js` so other screens can share it without duplicating the list. |
+| Onboarding — Plan Questionnaire (new) | `src/screens/onboarding/PlanQuestionnaire.jsx/.css` | **New, 2026-08-21.** Added after "Choose Journey," modeled on a reference tool the human linked (https://pcos-root-plan.tiiny.site — a one-question-at-a-time conversational quiz). 5 questions (goal, concerns, activity level, current medical support, reminder timing), one per screen, reusing `OnboardingHeader` and the existing `.chip`/`.chip-row` styling from `AboutYou.css` — no new input CSS. Only "What's your name?" was actually observed in the reference tool before the trail went cold; the other 4 questions are an inferred, reasonable set for a lifestyle-plan intake, not verbatim from the source. On the last question, "Generate my plan" calls `buildPlan()` (see below) and the result feeds `App.jsx`'s `profile.plan`. |
+| Home | `src/screens/Home.jsx/.css` | **Rebuilt 2026-08-21, content only** (human: "don't change the visualization" — same `.card`/`.section-title`/`ProgressRing`/`TopBar` primitives throughout, no new visual language). Replaced the old 6-item emoji domain grid and the Home-nested "Talk to Experts" banner with 5 new sections per the human's own spec: journey destination (derived from `profile.journeys` via `journeys.js`), a 7-day calendar strip (today highlighted, dot on mock event days — reuses the day-column loop pattern), a "Today's Plan" snippet (current phase from `profile.plan`, taps through to the Plan tab), an "Upcoming Medical Consultations" card (taps through to Care), and a new "Sukoon noticed" insight card (2-3 canned mascot-voiced messages, one shown per visit — copy is a first draft, not final). |
+| Plan | `src/screens/Plan.jsx/.css` | **Restructured 2026-08-21 into a full roadmap.** The old standalone "Today's Focus" card is gone (superseded by Home's teaser of the same data — single source of truth is `profile.plan.phases`, no duplication). New "Full Roadmap" section: one stacked card per phase (title, status badge, `ProgressRing`), only the *current* phase auto-expands its action list, others are tap-to-expand. "Weekly Overview" (7-day bar chart + streak stats) **moved to Track** (human's call, given "Plan = roadmap" vs "Track = trends"). Daily Progress and the full Upcoming Reminders list are unchanged. Light mode only; reference also showed a dark-mode variant, still not addressed. |
+| Track | `src/screens/Track.jsx/.css` | **Extended 2026-08-21.** Kept "Today's log" and the add button as-is; replaced the old static placeholder with the "Weekly Overview" moved from Plan (unchanged content, just relocated) plus a new "Water intake this week" trend chart, reusing the same hand-rolled bar-chart pattern (no chart library in the project, none added). Single metric for now, not a multi-metric switcher. |
+| Care (was "Talk to Experts") | `src/screens/Experts.jsx/.css` | Same screen, **promoted to its own bottom-nav tab 2026-08-21** (previously only reachable via a Home banner + `homeView` state, which no longer exists). No `onBack` is passed anymore since it's a top-level tab now — `TopBar` already omits its header row entirely when `onBack` is absent, so no `Experts.jsx` change was needed for that. (The `onBack`-driven click-through bug fixed earlier the same day, see Navigation section, only ever affected `OnboardingHeader`, not this screen's `TopBar`.) |
+| Profile ("You") | `src/screens/Profile.jsx/.css` | **2026-08-21:** the hardcoded `"PCOS Care · Mental Well-being"` subtitle is now `journeyLabel(profile.journeys)`, genuinely derived from what the user picked in onboarding. First-pass otherwise; no reference screenshot provided. |
+| Sukoon (was "Chat") | `src/screens/ChatEmbed.jsx/.css` | Just an iframe wrapper — the actual UI is the untouched chat app. Only the bottom-nav label changed (2026-08-21), this screen itself is untouched. |
 
 ## Navigation
 
@@ -94,14 +105,18 @@ Onboarding order (`App.jsx` `stage`): **Splash → About You → Choose Journey 
 
 **Real bug found and fixed 2026-08-21 (a correction to an earlier note in this file):** both onboarding back buttons (`OnboardingHeader`, used by both About You and Choose Journey) were reported by a previous claim here as "confirmed working live" — that check was invalid. It called `element.click()` via JS, which invokes the DOM node directly and bypasses real browser hit-testing. The human reported back navigation broken in three separate real browsers (including a private window, ruling out cache), which prompted re-testing with `document.elementFromPoint()` at the button's actual on-screen coordinates — the real hit-testing path any mouse/touch click goes through. That returned `.onboarding-header__content`, not the back button: `.onboarding-header__back` uses `float: left` (removing it from normal flow), so its following sibling `.onboarding-header__content` still spans the full header width including over the float, and with both sharing `z-index: 2`, the later-in-DOM element wins paint order and silently absorbs the click — even though nothing is visibly drawn there. Fixed by bumping `.onboarding-header__back` to `z-index: 3` in `OnboardingHeader.css`. Re-verified with the same `elementFromPoint` method: now resolves inside the button. **Lesson: `element.click()` is not a valid stand-in for a real click when verifying that something is clickable — it proves the handler works, not that a real pointer event would ever reach it. Use `document.elementFromPoint()` at the element's actual rect, or a real coordinate-based click, when the question is "does clicking this work."**
 
-`TopBar`'s back button (used by Experts) does not have this bug — it doesn't use `float`, so its siblings stack normally rather than overlapping. Bottom-nav tabs (Home/Plan/Track/Chat/You) have no "back" concept by design; the one real navigational gap was Talk to Experts (see status table above), fixed separately.
+`TopBar`'s back button does not have this bug — it doesn't use `float`, so its siblings stack normally rather than overlapping.
+
+**Bottom nav is now 6 tabs** (`src/components/BottomNav.jsx`, 2026-08-21): Home · Plan · Track · Care · Sukoon · You. Bottom-nav tabs have no "back" concept by design — Care (formerly the Home-nested "Talk to Experts") is now a direct tab like the others, no back button, since `homeView` state was removed entirely from `App.jsx`.
 
 ## Shared components (edit once, affects multiple screens)
 
-- `src/components/TopBar.jsx/.css` — header used on Home/Plan/Track/Experts/Profile. Supports an optional `onBack` prop (renders a back chevron when passed — currently only `Experts` uses it; the header row doesn't render at all when `onBack` is absent). **2026-08-21: removed the hamburger menu icon, the "more options" (⋯) icon, and the "Need help now" pill** — all three had zero `onClick` handler anywhere in the codebase (confirmed by grep), so they were fully dead UI on every screen that used `TopBar`. Home's tagline ("What's on your mind today?") was also removed at the human's request. If a real menu/help/more-options destination gets built later, re-add the relevant button then rather than restoring the placeholder.
-- `src/components/OnboardingHeader.jsx/.css` — header used on the two onboarding screens
-- `src/components/BottomNav.jsx/.css` — the 5-tab bar
-- `src/components/ProgressRing.jsx` — circular progress used on Plan
+- `src/components/TopBar.jsx/.css` — header used on Home/Plan/Track/Care/Profile. Supports an optional `onBack` prop (renders a back chevron instead of the header row when passed — as of 2026-08-21, nothing currently passes it; kept for any future screen that's reached as a pushed sub-view rather than a top-level tab, same pattern used successfully for the now-retired Home→Experts nesting). **2026-08-21: removed the hamburger menu icon, the "more options" (⋯) icon, and the "Need help now" pill** — all three had zero `onClick` handler anywhere in the codebase (confirmed by grep), so they were fully dead UI on every screen that used `TopBar`. Home's tagline ("What's on your mind today?") was also removed at the human's request. If a real menu/help/more-options destination gets built later, re-add the relevant button then rather than restoring the placeholder.
+- `src/components/OnboardingHeader.jsx/.css` — header used on the three onboarding screens (About You, Choose Journey, and the new Plan Questionnaire).
+- `src/components/BottomNav.jsx/.css` — the 6-tab bar (was 5, see above). Font-size/icon-size trimmed slightly (0.68rem→0.6rem, 22px→20px icons) to fit 6 labels at 375px without wrapping.
+- `src/components/ProgressRing.jsx` — circular progress, used on Plan and now also Home.
+- `src/data/journeys.js` (new, 2026-08-21) — the `JOURNEYS` list (id/emoji/title/desc), lifted out of `ChooseJourney.jsx` so `Home`/`Profile`/the plan generator can share one source of truth via `journeyLabel()`/`journeyEmoji()`/`journeyById()`.
+- `src/data/planTemplates.js` (new, 2026-08-21) — `buildPlan(journeyIds, answers)`, the mock roadmap generator. One fixed 3-phase framework used for every journey (Lifestyle Foundations → Medical Care & Supervision → Consistency & Tracking — confirmed with the human: any lifestyle/age-based condition needs this same combination), with per-journey action content (`JOURNEY_ACTIONS`) filling each phase. If more than one journey was chosen, 1-2 actions from the secondary journey(s) get merged into the primary journey's phases (capped at 4 actions/phase).
 
 ## Suggested next steps, in order
 
@@ -110,12 +125,13 @@ Onboarding order (`App.jsx` `stage`): **Splash → About You → Choose Journey 
    back up: mascot needs more work, UI component placement/hierarchy
    needs refinement, and information density needs to come down. See
    status table above for full history.
-2. Proceed screen-by-screen in the order above, using each
-   reference screenshot as the target. Onboarding (Choose Journey, About
-   You) is next in that order and was already close to reference as of
-   last review — likely just needs a live re-check, not a rebuild.
-3. Home, Track, and Profile have no reference screenshots — flag this to
-   the human rather than assuming the first-pass version is "done."
+2. Onboarding (About You, Choose Journey) is close to reference; the new
+   Plan Questionnaire has no reference to compare against (see Open
+   items below) but is functionally verified end-to-end.
+3. Home, Track, and Profile still have no *reference screenshots* in the
+   original design sense — they were rebuilt 2026-08-21 from the human's
+   own written content spec instead (see status table), not a mockup.
+   Still worth flagging to the human rather than assuming "done."
 4. Vercel auto-deploys `sukoon-webapp` on every push to `main` (no
    Root Directory changes needed anymore — that's already fixed).
 
@@ -125,3 +141,14 @@ Onboarding order (`App.jsx` `stage`): **Splash → About You → Choose Journey 
 - Whether Home and Track need their own reference designs from the human
 - Splash illustration source is resolved (cropped from the reference
   screenshot itself, see status table) — no longer open.
+- **Plan Questionnaire's exact question list** (2026-08-21) — only "What's
+  your name?" was actually observed in the referenced tool
+  (pcos-root-plan.tiiny.site); the other 4 questions were inferred, not
+  confirmed word-for-word with the human. Revisit if the human has a
+  specific list in mind.
+- **"Sukoon noticed" copy** (2026-08-21) — the 2-3 canned messages on Home
+  are a first draft, not signed-off final copy.
+- **Custom illustrated icons** — Choose Journey, its tag chips, and Home's
+  old domain grid all use plain emoji where the original reference/prior
+  design intent called for custom painterly illustrations. Needs real
+  icon assets to close, same as the splash mascot/hero-photo situation.

@@ -1,5 +1,6 @@
 import { ChevronRight, Bell, ShieldCheck, CreditCard, LifeBuoy, LogOut } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
+import { journeyLabel } from "../data/journeys.js";
 import "./Profile.css";
 
 const ROWS = [
@@ -9,7 +10,8 @@ const ROWS = [
   { Icon: LifeBuoy, label: "Help & support" },
 ];
 
-export default function Profile({ name = "Ananya" }) {
+export default function Profile({ profile }) {
+  const name = profile?.name || "Ananya";
   return (
     <div className="profile-screen">
       <TopBar title="You" tagline={name} compact />
@@ -19,7 +21,7 @@ export default function Profile({ name = "Ananya" }) {
           <div className="profile-screen__avatar">{name[0]}</div>
           <div>
             <strong>{name}</strong>
-            <span>PCOS Care · Mental Well-being</span>
+            <span>{journeyLabel(profile?.journeys)}</span>
           </div>
         </div>
 

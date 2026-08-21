@@ -18,10 +18,11 @@
   justify-content: center;
   gap: 3px;
   color: var(--ink-soft);
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   font-weight: 600;
   position: relative;
   padding: 6px 0 4px;
+  white-space: nowrap;
 }
 
 .bottom-nav__item.is-active {

@@ -9,6 +9,16 @@ const LOGS = [
   { emoji: "🩸", label: "Cycle", value: "Day 12" },
 ];
 
+const WEEK = [
+  { day: "M", value: 0.4 }, { day: "T", value: 0.55 }, { day: "W", value: 0.5 },
+  { day: "T", value: 0.65 }, { day: "F", value: 0.9 }, { day: "S", value: 0.7 }, { day: "S", value: 0.35 },
+];
+
+const WATER_TREND = [
+  { day: "M", value: 0.6 }, { day: "T", value: 0.75 }, { day: "W", value: 0.5 },
+  { day: "T", value: 0.85 }, { day: "F", value: 0.9 }, { day: "S", value: 0.65 }, { day: "S", value: 0.62 },
+];
+
 export default function Track() {
   return (
     <div className="track-screen">
@@ -35,8 +45,37 @@ export default function Track() {
 
         <section>
           <h2 className="section-title">This week</h2>
-          <div className="card track-screen__placeholder">
-            <p>Your trends will show up here once you've logged a few days.</p>
+          <div className="card track-screen__weekly">
+            <div className="track-screen__weekly-mid">
+              <p className="track-screen__weekly-praise">Great going, Ananya! 💜</p>
+              <p className="track-screen__weekly-sub">You're building a healthier you.</p>
+              <div className="track-screen__bars">
+                {WEEK.map((d, i) => (
+                  <div key={i} className="track-screen__bar-col">
+                    <div className="track-screen__bar" style={{ height: `${d.value * 100}%` }} />
+                    <span>{d.day}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="track-screen__weekly-stats">
+              <div><span>❤️ 4</span><small>Day streak</small></div>
+              <div><span>🌿 12</span><small>Goals completed</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="section-title">Water intake this week</h2>
+          <div className="card track-screen__trend">
+            <div className="track-screen__bars">
+              {WATER_TREND.map((d, i) => (
+                <div key={i} className="track-screen__bar-col">
+                  <div className="track-screen__bar track-screen__bar--water" style={{ height: `${d.value * 100}%` }} />
+                  <span>{d.day}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </div>

@@ -1,4 +1,5 @@
-import { Heart, Bell, ChevronRight, Sparkles, Salad, Droplet, Footprints, Brain } from "lucide-react";
+import { useState } from "react";
+import { Heart, Bell, ChevronDown, Salad, Droplet, Footprints, Brain } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
 import "./Plan.css";
@@ -10,17 +11,19 @@ const DAILY_PROGRESS = [
   { Icon: Brain, label: "Mind care moment", done: false, percent: 20 },
 ];
 
-const WEEK = [
-  { day: "M", value: 0.4 }, { day: "T", value: 0.55 }, { day: "W", value: 0.5 },
-  { day: "T", value: 0.65 }, { day: "F", value: 0.9 }, { day: "S", value: 0.7 }, { day: "S", value: 0.35 },
-];
-
 const REMINDERS = [
   { title: "Take Letrozole", subtitle: "9:00 AM • Take with water", badge: "Today" },
   { title: "Follicular scan", subtitle: "Day 10 • 11:30 AM", badge: "Tomorrow" },
 ];
 
-export default function Plan() {
+const STATUS_LABEL = { current: "Current", upcoming: "Upcoming", done: "Done" };
+
+export default function Plan({ profile }) {
+  const phases = profile?.plan?.phases ?? [];
+  const [expandedId, setExpandedId] = useState(
+    () => phases.find((p) => p.status === "current")?.id
+  );
+
   return (
     <div className="plan-screen">
       <TopBar title="Your Plan" tagline="A plan, just for you." />
@@ -31,18 +34,54 @@ export default function Plan() {
           <p>Small daily steps can help you feel more like you again.</p>
         </div>
 
-        <section>
-          <h2 className="section-title">Today's Focus</h2>
-          <div className="card plan-screen__focus">
-            <span className="plan-screen__focus-icon"><Sparkles size={20} /></span>
-            <div className="plan-screen__focus-text">
-              <strong>Boost energy &amp; reduce cravings</strong>
-              <span>2 of 5 steps done</span>
+        {phases.length > 0 && (
+          <section>
+            <h2 className="section-title">Full Roadmap</h2>
+            <div className="plan-screen__roadmap">
+              {phases.map((phase) => {
+                const isExpanded = expandedId === phase.id;
+                const done = phase.actions.filter((a) => a.done).length;
+                const total = phase.actions.length;
+                const percent = total ? Math.round((done / total) * 100) : 0;
+                return (
+                  <div className="card plan-screen__phase" key={phase.id}>
+                    <button
+                      type="button"
+                      className="plan-screen__phase-header"
+                      onClick={() => setExpandedId(isExpanded ? null : phase.id)}
+                    >
+                      <div className="plan-screen__phase-text">
+                        <span className={"plan-screen__badge plan-screen__badge--" + phase.status}>
+                          {STATUS_LABEL[phase.status]}
+                        </span>
+                        <strong>{phase.title}</strong>
+                        <span>{done} of {total} done</span>
+                      </div>
+                      <ProgressRing percent={percent} size={40} stroke={4} />
+                      <ChevronDown
+                        size={18}
+                        color="var(--ink-soft)"
+                        className={"plan-screen__phase-chevron" + (isExpanded ? " is-open" : "")}
+                      />
+                    </button>
+                    {isExpanded && (
+                      <ul className="plan-screen__phase-actions">
+                        {phase.actions.map((a) => (
+                          <li key={a.id}>
+                            <span className={"plan-screen__check" + (a.done ? "" : " is-pending")}>
+                              {a.done ? "✓" : ""}
+                            </span>
+                            <span>{a.label}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <ProgressRing percent={40} size={54} label="Today" />
-            <ChevronRight size={18} color="var(--ink-soft)" />
-          </div>
-        </section>
+          </section>
+        )}
 
         <section>
           <h2 className="section-title">Daily Progress</h2>
@@ -58,32 +97,6 @@ export default function Plan() {
                 )}
               </div>
             ))}
-          </div>
-        </section>
-
-        <section>
-          <div className="section-title-row">
-            <h2 className="section-title">Weekly Overview</h2>
-            <button className="link-btn">View all <ChevronRight size={14} /></button>
-          </div>
-          <div className="card plan-screen__weekly">
-            <ProgressRing percent={65} size={72} label="This week" />
-            <div className="plan-screen__weekly-mid">
-              <p className="plan-screen__weekly-praise">Great going, Ananya! 💜</p>
-              <p className="plan-screen__weekly-sub">You're building a healthier you.</p>
-              <div className="plan-screen__bars">
-                {WEEK.map((d, i) => (
-                  <div key={i} className="plan-screen__bar-col">
-                    <div className="plan-screen__bar" style={{ height: `${d.value * 100}%` }} />
-                    <span>{d.day}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="plan-screen__weekly-stats">
-              <div><span>❤️ 4</span><small>Day streak</small></div>
-              <div><span>🌿 12</span><small>Goals completed</small></div>
-            </div>
           </div>
         </section>
 

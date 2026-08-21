@@ -9,8 +9,11 @@ const TAGS = [
 ];
 
 export default function AboutYou({ onBack, onContinue }) {
+  const [name, setName] = useState("");
   const [gender, setGender] = useState("Female");
+  const [age, setAge] = useState("");
   const [tags, setTags] = useState(new Set());
+  const [location, setLocation] = useState("");
 
   const toggleTag = (t) => {
     setTags((prev) => {
@@ -29,14 +32,17 @@ export default function AboutYou({ onBack, onContinue }) {
       />
       <form
         className="about-you__body"
-        onSubmit={(e) => { e.preventDefault(); onContinue(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          onContinue({ name, gender, age, tags: [...tags], location });
+        }}
       >
         <div className="about-you__card">
           <label className="field">
             <span className="field__label">What should we call you?</span>
             <span className="field__input">
               <User size={18} />
-              <input type="text" placeholder="Your name" />
+              <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
             </span>
           </label>
 
@@ -59,7 +65,7 @@ export default function AboutYou({ onBack, onContinue }) {
           <label className="field">
             <span className="field__label">Age</span>
             <span className="field__input">
-              <select defaultValue="">
+              <select value={age} onChange={(e) => setAge(e.target.value)}>
                 <option value="" disabled>Select your age</option>
                 {Array.from({ length: 63 }, (_, i) => i + 13).map((age) => (
                   <option key={age} value={age}>{age}</option>
@@ -90,7 +96,7 @@ export default function AboutYou({ onBack, onContinue }) {
             <span className="field__label">Where are you located?</span>
             <span className="field__input">
               <MapPin size={18} />
-              <input type="text" placeholder="Enter city or area (optional)" />
+              <input type="text" placeholder="Enter city or area (optional)" value={location} onChange={(e) => setLocation(e.target.value)} />
             </span>
           </label>
         </div>

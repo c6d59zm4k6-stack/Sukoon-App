@@ -3,6 +3,7 @@ import BottomNav from "./components/BottomNav.jsx";
 import Splash from "./screens/Splash.jsx";
 import ChooseJourney from "./screens/onboarding/ChooseJourney.jsx";
 import AboutYou from "./screens/onboarding/AboutYou.jsx";
+import PlanQuestionnaire from "./screens/onboarding/PlanQuestionnaire.jsx";
 import Home from "./screens/Home.jsx";
 import Plan from "./screens/Plan.jsx";
 import Track from "./screens/Track.jsx";
@@ -10,11 +11,16 @@ import Experts from "./screens/Experts.jsx";
 import Profile from "./screens/Profile.jsx";
 import ChatEmbed from "./screens/ChatEmbed.jsx";
 
-// stage: "splash" | "about" | "journey" | "app"
+const EMPTY_PLAN = { phases: [], answers: {} };
+
+// stage: "splash" | "about" | "journey" | "plan-quiz" | "app"
 export default function App() {
   const [stage, setStage] = useState("splash");
   const [tab, setTab] = useState("home");
-  const [homeView, setHomeView] = useState("home"); // "home" | "experts"
+  const [profile, setProfile] = useState({
+    name: "", gender: "", age: "", tags: [], location: "",
+    journeys: [], quizAnswers: {}, plan: EMPTY_PLAN,
+  });
 
   if (stage === "splash") {
     return (
@@ -27,7 +33,13 @@ export default function App() {
   if (stage === "about") {
     return (
       <div className="app-shell">
-        <AboutYou onBack={() => setStage("splash")} onContinue={() => setStage("journey")} />
+        <AboutYou
+          onBack={() => setStage("splash")}
+          onContinue={(aboutData) => {
+            setProfile((p) => ({ ...p, ...aboutData }));
+            setStage("journey");
+          }}
+        />
       </div>
     );
   }
@@ -35,7 +47,28 @@ export default function App() {
   if (stage === "journey") {
     return (
       <div className="app-shell">
-        <ChooseJourney onBack={() => setStage("about")} onContinue={() => setStage("app")} />
+        <ChooseJourney
+          onBack={() => setStage("about")}
+          onContinue={(journeyIds) => {
+            setProfile((p) => ({ ...p, journeys: journeyIds }));
+            setStage("plan-quiz");
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (stage === "plan-quiz") {
+    return (
+      <div className="app-shell">
+        <PlanQuestionnaire
+          journeys={profile.journeys}
+          onBack={() => setStage("journey")}
+          onContinue={({ answers, plan }) => {
+            setProfile((p) => ({ ...p, quizAnswers: answers, plan }));
+            setStage("app");
+          }}
+        />
       </div>
     );
   }
@@ -43,17 +76,17 @@ export default function App() {
   const renderTab = () => {
     switch (tab) {
       case "home":
-        return homeView === "experts"
-          ? <Experts onBack={() => setHomeView("home")} />
-          : <Home onOpenExperts={() => setHomeView("experts")} />;
+        return <Home profile={profile} onOpenPlan={() => setTab("plan")} onNavigateToCare={() => setTab("care")} />;
       case "plan":
-        return <Plan />;
+        return <Plan profile={profile} />;
       case "track":
         return <Track />;
-      case "chat":
+      case "care":
+        return <Experts />;
+      case "sukoon":
         return <ChatEmbed />;
       case "profile":
-        return <Profile />;
+        return <Profile profile={profile} />;
       default:
         return null;
     }
@@ -62,10 +95,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="app-shell__body">{renderTab()}</div>
-      <BottomNav
-        active={tab}
-        onChange={(next) => { setTab(next); setHomeView("home"); }}
-      />
+      <BottomNav active={tab} onChange={setTab} />
     </div>
   );
 }

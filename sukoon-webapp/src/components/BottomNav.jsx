@@ -1,11 +1,12 @@
-import { Home, CalendarCheck, HeartPulse, Cloud, User } from "lucide-react";
+import { Home, CalendarCheck, HeartPulse, Stethoscope, Cloud, User } from "lucide-react";
 import "./BottomNav.css";
 
 const TABS = [
   { id: "home", label: "Home", Icon: Home },
   { id: "plan", label: "Plan", Icon: CalendarCheck },
   { id: "track", label: "Track", Icon: HeartPulse },
-  { id: "chat", label: "Chat", Icon: Cloud },
+  { id: "care", label: "Care", Icon: Stethoscope },
+  { id: "sukoon", label: "Sukoon", Icon: Cloud },
   { id: "profile", label: "You", Icon: User },
 ];
 
@@ -21,7 +22,7 @@ export default function BottomNav({ active, onChange }) {
             onClick={() => onChange(id)}
             aria-current={isActive ? "page" : undefined}
           >
-            <Icon size={22} strokeWidth={isActive ? 2.4 : 1.8} />
+            <Icon size={20} strokeWidth={isActive ? 2.4 : 1.8} />
             <span>{label}</span>
             {isActive && <span className="bottom-nav__dot" />}
           </button>
