@@ -8,6 +8,7 @@ import Home from "./screens/Home.jsx";
 import Plan from "./screens/Plan.jsx";
 import Track from "./screens/Track.jsx";
 import Experts from "./screens/Experts.jsx";
+import DoctorConcierge from "./screens/DoctorConcierge.jsx";
 import Profile from "./screens/Profile.jsx";
 import ChatEmbed from "./screens/ChatEmbed.jsx";
 import { buildPlan as buildFallbackPlan } from "./data/planTemplates.js";
@@ -18,6 +19,7 @@ const EMPTY_PLAN = { phases: [], answers: {} };
 export default function App() {
   const [stage, setStage] = useState("splash");
   const [tab, setTab] = useState("home");
+  const [careView, setCareView] = useState(null);
   const [profile, setProfile] = useState({
     name: "", gender: "", age: "", tags: [], location: "",
     journeys: [], quizAnswers: {}, plan: EMPTY_PLAN,
@@ -91,7 +93,9 @@ export default function App() {
       case "track":
         return <Track />;
       case "care":
-        return <Experts />;
+        return careView === "concierge"
+          ? <DoctorConcierge profile={profile} onBack={() => setCareView(null)} />
+          : <Experts onOpenConcierge={() => setCareView("concierge")} />;
       case "sukoon":
         return <ChatEmbed />;
       case "profile":

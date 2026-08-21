@@ -246,3 +246,11 @@
 }
 .experts-screen__quiz strong { display: block; font-size: 0.86rem; }
 .experts-screen__quiz span { font-size: 0.74rem; color: var(--ink-soft); }
+
+.experts-screen__quiz-icon {
+  width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--indigo-mid);
+  display: flex; align-items: center; justify-content: center;
+}

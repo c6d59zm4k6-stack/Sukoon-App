@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShieldCheck, Clock, Lock, Video, Star, Cloud, MapPin, Phone, Users, CheckCircle2, X } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
+import { SPECIALTIES, EXPERTS, CLINIC, clinicMapsUrl, formatPhone } from "../data/experts.js";
 import "./Experts.css";
 
 const TRUST = [
@@ -10,36 +11,6 @@ const TRUST = [
   { Icon: Video, label: "Online or In-Clinic" },
 ];
 
-const SPECIALTIES = [
-  { id: "gynae", emoji: "🌸", title: "Gynaecology & Women's Health", desc: "PCOS, periods, hormones, women's well-being" },
-  { id: "fertility", emoji: "🎯", title: "Fertility", desc: "Conception, IVF, IUI, trying to conceive" },
-  { id: "psychiatry", emoji: "🧠", title: "Psychiatry", desc: "Anxiety, depression, sleep, stress, habit change" },
-  { id: "nutrition", emoji: "🌱", title: "Nutrition", desc: "Diet plans, gut health, weight & lifestyle" },
-];
-
-const EXPERTS = [
-  { name: "Dr. Deepika Verma", role: "Gynaecologist, Reproductive Specialist", specialties: ["gynae", "fertility"], rating: "4.9 (120)", avail: "Available today", time: "10:00 AM" },
-  { name: "Dr. Aditi Sharma", role: "MD, Psychiatrist", specialties: ["psychiatry"], rating: "4.9 (110)", avail: "Available today", time: "4:00 PM" },
-  { name: "Priyanka Dey", role: "Nutritionist", specialties: ["nutrition"], rating: "4.8 (88)", avail: "Available tomorrow", time: "11:00 AM" },
-];
-
-// Real single location for now — phone left blank until the human provides
-// one (the "Call" option only renders once CLINIC.phone is set).
-const CLINIC = {
-  name: "Woodhouse Healthcare Speciality Clinic",
-  address: "Nehru Chowk, Bhopal",
-  hours: "9 AM – 7 PM",
-  phone: "9109698953",
-};
-
-function clinicMapsUrl() {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CLINIC.name + ", " + CLINIC.address)}`;
-}
-
-function formatPhone(phone) {
-  return `+91 ${phone.slice(0, 5)} ${phone.slice(5)}`;
-}
-
 const ONLINE_SLOTS = ["Today, 4:00 PM", "Tomorrow, 10:00 AM", "Tomorrow, 2:00 PM"];
 
 const BROWSE_MODES = [
@@ -48,7 +19,7 @@ const BROWSE_MODES = [
   { id: "online", label: "Online Consultation", Icon: Video },
 ];
 
-export default function Experts({ onBack }) {
+export default function Experts({ onBack, onOpenConcierge }) {
   const [specialty, setSpecialty] = useState(null);
   const [mode, setMode] = useState("doctor");
   const [confirmation, setConfirmation] = useState(null);
@@ -225,11 +196,11 @@ export default function Experts({ onBack }) {
           </section>
         )}
 
-        <button className="card experts-screen__quiz">
-          <Cloud size={20} color="var(--indigo-mid)" />
+        <button className="card experts-screen__quiz" onClick={onOpenConcierge}>
+          <span className="experts-screen__quiz-icon"><Cloud size={20} /></span>
           <div>
             <strong>Not sure whom to consult?</strong>
-            <span>Take a quick assessment and we'll find the right expert.</span>
+            <span>Chat with Sukoon and we'll find the right expert for you.</span>
           </div>
         </button>
       </div>
