@@ -14,7 +14,7 @@ const DOMAINS = [
 export default function Home({ name = "Ananya", onOpenExperts }) {
   return (
     <div className="home-screen">
-      <TopBar title={`Hi, ${name} 👋`} tagline="What's on your mind today?" />
+      <TopBar title={`Hi, ${name} 👋`} />
 
       <div className="home-screen__content">
         <section>

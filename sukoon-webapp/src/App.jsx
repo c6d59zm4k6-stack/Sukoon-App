@@ -10,7 +10,7 @@ import Experts from "./screens/Experts.jsx";
 import Profile from "./screens/Profile.jsx";
 import ChatEmbed from "./screens/ChatEmbed.jsx";
 
-// stage: "splash" | "journey" | "about" | "app"
+// stage: "splash" | "about" | "journey" | "app"
 export default function App() {
   const [stage, setStage] = useState("splash");
   const [tab, setTab] = useState("home");
@@ -19,15 +19,7 @@ export default function App() {
   if (stage === "splash") {
     return (
       <div className="app-shell">
-        <Splash onBegin={() => setStage("journey")} onCreateAccount={() => setStage("journey")} />
-      </div>
-    );
-  }
-
-  if (stage === "journey") {
-    return (
-      <div className="app-shell">
-        <ChooseJourney onBack={() => setStage("splash")} onContinue={() => setStage("about")} />
+        <Splash onBegin={() => setStage("about")} onCreateAccount={() => setStage("about")} />
       </div>
     );
   }
@@ -35,7 +27,15 @@ export default function App() {
   if (stage === "about") {
     return (
       <div className="app-shell">
-        <AboutYou onBack={() => setStage("journey")} onContinue={() => setStage("app")} />
+        <AboutYou onBack={() => setStage("splash")} onContinue={() => setStage("journey")} />
+      </div>
+    );
+  }
+
+  if (stage === "journey") {
+    return (
+      <div className="app-shell">
+        <ChooseJourney onBack={() => setStage("about")} onContinue={() => setStage("app")} />
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default function App() {
     switch (tab) {
       case "home":
         return homeView === "experts"
-          ? <Experts />
+          ? <Experts onBack={() => setHomeView("home")} />
           : <Home onOpenExperts={() => setHomeView("experts")} />;
       case "plan":
         return <Plan />;

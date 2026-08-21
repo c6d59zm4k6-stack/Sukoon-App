@@ -60,6 +60,11 @@
   background: transparent;
 }
 
+.field__input select {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 .segmented {
   display: flex;
   gap: 8px;

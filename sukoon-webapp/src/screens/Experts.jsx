@@ -23,10 +23,10 @@ const EXPERTS = [
   { name: "Dt. Priya Kapoor", role: "Nutritionist • 7+ yrs", rating: "4.8 (88)", avail: "Available tomorrow", time: "11:00 AM" },
 ];
 
-export default function Experts() {
+export default function Experts({ onBack }) {
   return (
     <div className="experts-screen">
-      <TopBar title="Talk to Experts" tagline="Trusted care. Human expertise." />
+      <TopBar title="Talk to Experts" tagline="Trusted care. Human expertise." onBack={onBack} />
 
       <div className="experts-screen__content">
         <div className="card experts-screen__trust">
