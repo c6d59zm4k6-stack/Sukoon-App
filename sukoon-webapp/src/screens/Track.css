@@ -8,35 +8,129 @@
   gap: 18px;
 }
 
-.track-screen__grid {
+.track-screen__habit-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
-.track-screen__item {
+.track-screen__habit {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   text-align: center;
-  padding: 18px 10px;
+  padding: 16px 10px;
+  position: relative;
 }
-.track-screen__emoji { font-size: 1.6rem; }
-.track-screen__item strong { font-size: 0.92rem; color: var(--ink); }
-.track-screen__item span { font-size: 0.72rem; color: var(--ink-soft); }
 
-.track-screen__add {
+.track-screen__habit.is-done {
+  border-color: var(--indigo-mid);
+  background: var(--lavender-soft);
+}
+
+.track-screen__habit-icon {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--lavender-soft);
+  color: var(--indigo-mid);
+  display: flex; align-items: center; justify-content: center;
+}
+.track-screen__habit.is-done .track-screen__habit-icon {
+  background: var(--indigo-mid);
+  color: #fff;
+}
+
+.track-screen__habit span:not(.track-screen__habit-icon):not(.track-screen__check) {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.track-screen__check {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--online-dot);
+  color: #fff;
+  font-size: 0.6rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.track-screen__check.is-pending {
+  background: #fff;
+  border: 1.5px solid var(--border);
+}
+
+.track-screen__cycle {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.track-screen__cycle-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border: 1.5px dashed var(--border);
-  color: var(--indigo-mid);
-  font-weight: 700;
-  font-size: 0.86rem;
-  box-shadow: none;
+  gap: 12px;
 }
+
+.track-screen__cycle-icon {
+  width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--dawn-pink);
+  color: #b5495b;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.track-screen__cycle-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.track-screen__cycle-text strong { font-size: 0.86rem; color: var(--ink); }
+.track-screen__cycle-text span { font-size: 0.74rem; color: var(--ink-soft); }
+
+.track-screen__cal-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.track-screen__cal-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.track-screen__cal-dot.is-period {
+  background: #b5495b;
+}
+
+.track-screen__cycle-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 999px;
+  background: var(--lavender-soft);
+  color: var(--indigo-mid-deep);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+.track-screen__cycle-btn:disabled {
+  opacity: 0.6;
+}
+
+.track-screen__feelings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.track-screen__feelings-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-top: 6px;
+}
+.track-screen__feelings-label:first-child { margin-top: 0; }
 
 .track-screen__weekly {
   display: flex;
@@ -102,15 +196,42 @@
   background: var(--lavender);
 }
 
-.track-screen__bar--water {
-  background: var(--indigo-mid);
-}
-
 .track-screen__bar-col span {
   font-size: 0.6rem;
   color: var(--ink-soft);
 }
 
-.track-screen__trend {
-  padding: 16px 14px;
+.track-screen__weight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.track-screen__weight-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.track-screen__weight-text strong { font-size: 0.86rem; color: var(--ink); }
+.track-screen__weight-text span { font-size: 0.72rem; color: var(--ink-soft); }
+
+.track-screen__weight-input {
+  width: 56px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 6px;
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.track-screen__weight-btn {
+  background: var(--lavender);
+  color: var(--indigo-mid-deep);
+  font-weight: 700;
+  font-size: 0.76rem;
+  padding: 8px 14px;
+  border-radius: 999px;
+  flex-shrink: 0;
 }

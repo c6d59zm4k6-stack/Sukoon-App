@@ -12,8 +12,10 @@ import DoctorConcierge from "./screens/DoctorConcierge.jsx";
 import Profile from "./screens/Profile.jsx";
 import ChatEmbed from "./screens/ChatEmbed.jsx";
 import { buildPlan as buildFallbackPlan } from "./data/planTemplates.js";
+import { todayKey } from "./data/habits.js";
 
 const EMPTY_PLAN = { phases: [], answers: {} };
+const EMPTY_TRACKING = { habitLog: {}, periods: [], symptomLog: {}, weightLog: [] };
 
 // stage: "splash" | "about" | "journey" | "plan-quiz" | "app"
 export default function App() {
@@ -22,8 +24,59 @@ export default function App() {
   const [careView, setCareView] = useState(null);
   const [profile, setProfile] = useState({
     name: "", gender: "", age: "", tags: [], location: "",
-    journeys: [], quizAnswers: {}, plan: EMPTY_PLAN,
+    journeys: [], quizAnswers: {}, plan: EMPTY_PLAN, tracking: EMPTY_TRACKING,
   });
+
+  const toggleHabit = (habitId) => {
+    const key = todayKey();
+    setProfile((p) => {
+      const today = p.tracking.habitLog[key] || {};
+      return {
+        ...p,
+        tracking: {
+          ...p.tracking,
+          habitLog: { ...p.tracking.habitLog, [key]: { ...today, [habitId]: !today[habitId] } },
+        },
+      };
+    });
+  };
+
+  const logPeriodToday = () => {
+    const key = todayKey();
+    setProfile((p) => ({
+      ...p,
+      tracking: {
+        ...p.tracking,
+        periods: p.tracking.periods.includes(key) ? p.tracking.periods : [...p.tracking.periods, key],
+      },
+    }));
+  };
+
+  const logSymptom = (field, value) => {
+    const key = todayKey();
+    setProfile((p) => {
+      const today = p.tracking.symptomLog[key] || { mood: null, energy: null, skin: [] };
+      let updated;
+      if (field === "skin") {
+        const has = today.skin.includes(value);
+        updated = { ...today, skin: has ? today.skin.filter((s) => s !== value) : [...today.skin, value] };
+      } else {
+        updated = { ...today, [field]: today[field] === value ? null : value };
+      }
+      return { ...p, tracking: { ...p.tracking, symptomLog: { ...p.tracking.symptomLog, [key]: updated } } };
+    });
+  };
+
+  const logWeight = (kg) => {
+    const key = todayKey();
+    setProfile((p) => ({
+      ...p,
+      tracking: {
+        ...p.tracking,
+        weightLog: [...p.tracking.weightLog.filter((w) => w.date !== key), { date: key, kg }],
+      },
+    }));
+  };
 
   if (stage === "splash") {
     return (
@@ -91,7 +144,15 @@ export default function App() {
       case "plan":
         return <Plan profile={profile} />;
       case "track":
-        return <Track />;
+        return (
+          <Track
+            profile={profile}
+            onToggleHabit={toggleHabit}
+            onLogPeriod={logPeriodToday}
+            onLogSymptom={logSymptom}
+            onLogWeight={logWeight}
+          />
+        );
       case "care":
         return careView === "concierge"
           ? <DoctorConcierge profile={profile} onBack={() => setCareView(null)} />

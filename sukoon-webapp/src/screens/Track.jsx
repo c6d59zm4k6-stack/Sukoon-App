@@ -1,81 +1,206 @@
-import { Plus } from "lucide-react";
+import { useState } from "react";
+import { CalendarHeart, Scale } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
+import { HABITS, todayKey, lastNDays } from "../data/habits.js";
+import { currentCycleDay, nextPeriodDate } from "../data/cycle.js";
 import "./Track.css";
 
-const LOGS = [
-  { emoji: "😌", label: "Mood", value: "Calm" },
-  { emoji: "🌙", label: "Sleep", value: "7h 20m" },
-  { emoji: "💧", label: "Water", value: "5 / 8 glasses" },
-  { emoji: "🩸", label: "Cycle", value: "Day 12" },
-];
+const MOODS = ["Low", "Okay", "Good"];
+const ENERGY_LEVELS = ["Low", "Okay", "High"];
+const SKIN_SYMPTOMS = ["Acne", "Hair thinning", "Bloating", "Fatigue"];
 
-const WEEK = [
-  { day: "M", value: 0.4 }, { day: "T", value: 0.55 }, { day: "W", value: 0.5 },
-  { day: "T", value: 0.65 }, { day: "F", value: 0.9 }, { day: "S", value: 0.7 }, { day: "S", value: 0.35 },
-];
+function habitCompletionPercent(dayLog) {
+  if (!dayLog) return 0;
+  const done = HABITS.filter((h) => dayLog[h.id]).length;
+  return done / HABITS.length;
+}
 
-const WATER_TREND = [
-  { day: "M", value: 0.6 }, { day: "T", value: 0.75 }, { day: "W", value: 0.5 },
-  { day: "T", value: 0.85 }, { day: "F", value: 0.9 }, { day: "S", value: 0.65 }, { day: "S", value: 0.62 },
-];
+function computeStreak(habitLog) {
+  let streak = 0;
+  const cursor = new Date();
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const key = todayKey(cursor);
+    const dayLog = habitLog[key];
+    const anyDone = dayLog && Object.values(dayLog).some(Boolean);
+    if (!anyDone) break;
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
 
-export default function Track() {
+function totalCompletions(habitLog) {
+  return Object.values(habitLog).reduce((sum, day) => sum + Object.values(day).filter(Boolean).length, 0);
+}
+
+export default function Track({ profile, onToggleHabit, onLogPeriod, onLogSymptom, onLogWeight }) {
+  const tracking = profile?.tracking ?? { habitLog: {}, periods: [], symptomLog: {}, weightLog: [] };
+  const key = todayKey();
+  const todaysHabits = tracking.habitLog[key] || {};
+  const todaysSymptoms = tracking.symptomLog[key] || { mood: null, energy: null, skin: [] };
+  const [weightInput, setWeightInput] = useState("");
+
+  const cycleDay = currentCycleDay(tracking.periods);
+  const predictedNext = nextPeriodDate(tracking.periods);
+  const periodLoggedToday = tracking.periods.includes(key);
+  const last14 = lastNDays(14);
+
+  const weekDays = lastNDays(7);
+  const streak = computeStreak(tracking.habitLog);
+  const goalsCompleted = totalCompletions(tracking.habitLog);
+
+  const latestWeight = tracking.weightLog[tracking.weightLog.length - 1];
+
+  const submitWeight = () => {
+    const kg = parseFloat(weightInput);
+    if (!kg || kg <= 0) return;
+    onLogWeight(kg);
+    setWeightInput("");
+  };
+
   return (
     <div className="track-screen">
       <TopBar title="Track" tagline="A few taps a day is enough." />
 
       <div className="track-screen__content">
         <section>
-          <h2 className="section-title">Today's log</h2>
-          <div className="track-screen__grid">
-            {LOGS.map((l) => (
-              <div className="card track-screen__item" key={l.label}>
-                <span className="track-screen__emoji">{l.emoji}</span>
-                <strong>{l.value}</strong>
-                <span>{l.label}</span>
-              </div>
-            ))}
+          <h2 className="section-title">Today's Habits</h2>
+          <div className="track-screen__habit-grid">
+            {HABITS.map(({ id, label, Icon }) => {
+              const done = !!todaysHabits[id];
+              return (
+                <button
+                  type="button"
+                  key={id}
+                  className={"card track-screen__habit" + (done ? " is-done" : "")}
+                  onClick={() => onToggleHabit(id)}
+                >
+                  <span className="track-screen__habit-icon"><Icon size={20} /></span>
+                  <span>{label}</span>
+                  <span className={"track-screen__check" + (done ? "" : " is-pending")}>{done ? "✓" : ""}</span>
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        <button className="card track-screen__add">
-          <Plus size={18} color="var(--indigo-mid)" />
-          <span>Log something else</span>
-        </button>
+        <section>
+          <h2 className="section-title">Your Cycle</h2>
+          <div className="card track-screen__cycle">
+            <div className="track-screen__cycle-row">
+              <span className="track-screen__cycle-icon"><CalendarHeart size={20} /></span>
+              <div className="track-screen__cycle-text">
+                <strong>{cycleDay ? `Day ${cycleDay} of your cycle` : "No period logged yet"}</strong>
+                <span>{predictedNext ? `Next period expected around ${predictedNext}` : "Log your period to get a prediction"}</span>
+              </div>
+            </div>
+            <div className="track-screen__cal-dots">
+              {last14.map((d) => {
+                const dKey = todayKey(d);
+                const isPeriod = tracking.periods.includes(dKey);
+                return <span key={dKey} className={"track-screen__cal-dot" + (isPeriod ? " is-period" : "")} title={dKey} />;
+              })}
+            </div>
+            <button
+              type="button"
+              className="track-screen__cycle-btn"
+              disabled={periodLoggedToday}
+              onClick={onLogPeriod}
+            >
+              {periodLoggedToday ? "Period logged today ✓" : "Log period start today"}
+            </button>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="section-title">How are you feeling?</h2>
+          <div className="card track-screen__feelings">
+            <span className="track-screen__feelings-label">Mood</span>
+            <div className="chip-row">
+              {MOODS.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className={"chip" + (todaysSymptoms.mood === m ? " is-active" : "")}
+                  onClick={() => onLogSymptom("mood", m)}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <span className="track-screen__feelings-label">Energy</span>
+            <div className="chip-row">
+              {ENERGY_LEVELS.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  className={"chip" + (todaysSymptoms.energy === e ? " is-active" : "")}
+                  onClick={() => onLogSymptom("energy", e)}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+            <span className="track-screen__feelings-label">Any of these today?</span>
+            <div className="chip-row">
+              {SKIN_SYMPTOMS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className={"chip" + (todaysSymptoms.skin.includes(s) ? " is-active" : "")}
+                  onClick={() => onLogSymptom("skin", s)}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
 
         <section>
           <h2 className="section-title">This week</h2>
           <div className="card track-screen__weekly">
             <div className="track-screen__weekly-mid">
-              <p className="track-screen__weekly-praise">Great going, Ananya! 💜</p>
+              <p className="track-screen__weekly-praise">Great going{profile?.name ? `, ${profile.name}` : ""}! 💜</p>
               <p className="track-screen__weekly-sub">You're building a healthier you.</p>
               <div className="track-screen__bars">
-                {WEEK.map((d, i) => (
-                  <div key={i} className="track-screen__bar-col">
-                    <div className="track-screen__bar" style={{ height: `${d.value * 100}%` }} />
-                    <span>{d.day}</span>
-                  </div>
-                ))}
+                {weekDays.map((d) => {
+                  const dKey = todayKey(d);
+                  const percent = habitCompletionPercent(tracking.habitLog[dKey]);
+                  return (
+                    <div key={dKey} className="track-screen__bar-col">
+                      <div className="track-screen__bar" style={{ height: `${Math.max(percent * 100, 4)}%` }} />
+                      <span>{d.toLocaleDateString(undefined, { weekday: "narrow" })}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
             <div className="track-screen__weekly-stats">
-              <div><span>❤️ 4</span><small>Day streak</small></div>
-              <div><span>🌿 12</span><small>Goals completed</small></div>
+              <div><span>❤️ {streak}</span><small>Day streak</small></div>
+              <div><span>🌿 {goalsCompleted}</span><small>Goals completed</small></div>
             </div>
           </div>
         </section>
 
         <section>
-          <h2 className="section-title">Water intake this week</h2>
-          <div className="card track-screen__trend">
-            <div className="track-screen__bars">
-              {WATER_TREND.map((d, i) => (
-                <div key={i} className="track-screen__bar-col">
-                  <div className="track-screen__bar track-screen__bar--water" style={{ height: `${d.value * 100}%` }} />
-                  <span>{d.day}</span>
-                </div>
-              ))}
+          <h2 className="section-title">Weight</h2>
+          <div className="card track-screen__weight">
+            <span className="track-screen__cycle-icon"><Scale size={20} /></span>
+            <div className="track-screen__weight-text">
+              <strong>{latestWeight ? `${latestWeight.kg} kg` : "No entries yet"}</strong>
+              <span>{latestWeight ? `Last logged ${latestWeight.date}` : "Logged weekly, not daily"}</span>
             </div>
+            <input
+              type="number"
+              inputMode="decimal"
+              placeholder="kg"
+              value={weightInput}
+              onChange={(e) => setWeightInput(e.target.value)}
+              className="track-screen__weight-input"
+            />
+            <button type="button" className="track-screen__weight-btn" onClick={submitWeight}>Log</button>
           </div>
         </section>
       </div>

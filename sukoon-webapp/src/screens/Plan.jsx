@@ -1,17 +1,11 @@
 import { useState } from "react";
-import { Heart, Bell, ChevronDown, Salad, Droplet, Footprints, Brain, Download, MessageCircle, Mail } from "lucide-react";
+import { Heart, Bell, ChevronDown, Download, MessageCircle, Mail } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
 import { downloadPlanPdf } from "../utils/planPdf.js";
 import { buildReportSummaryText } from "../data/planReport.js";
+import { HABITS, todayKey } from "../data/habits.js";
 import "./Plan.css";
-
-const DAILY_PROGRESS = [
-  { Icon: Salad, label: "Eat balanced meals", done: true },
-  { Icon: Droplet, label: "Drink more water", done: true },
-  { Icon: Footprints, label: "Walk / Move 10 min", done: false, percent: 60 },
-  { Icon: Brain, label: "Mind care moment", done: false, percent: 20 },
-];
 
 const REMINDERS = [
   { title: "Take Letrozole", subtitle: "9:00 AM • Take with water", badge: "Today" },
@@ -26,6 +20,7 @@ export default function Plan({ profile }) {
   const typeProfile = profile?.plan?.typeProfile;
   const tests = profile?.plan?.tests ?? [];
   const hasFullReport = Boolean(profile?.plan?.raw);
+  const todaysHabits = profile?.tracking?.habitLog?.[todayKey()] || {};
   const [expandedId, setExpandedId] = useState(
     () => phases.find((p) => p.status === "current")?.id
   );
@@ -159,17 +154,16 @@ export default function Plan({ profile }) {
         <section>
           <h2 className="section-title">Daily Progress</h2>
           <div className="plan-screen__daily-grid">
-            {DAILY_PROGRESS.map(({ Icon, label, done, percent }) => (
-              <div className="card plan-screen__daily-item" key={label}>
-                <div className="plan-screen__daily-icon"><Icon size={22} /></div>
-                <span>{label}</span>
-                {done ? (
-                  <span className="plan-screen__check">✓</span>
-                ) : (
-                  <ProgressRing percent={percent} size={26} stroke={3} />
-                )}
-              </div>
-            ))}
+            {HABITS.map(({ id, label, Icon }) => {
+              const done = !!todaysHabits[id];
+              return (
+                <div className="card plan-screen__daily-item" key={id}>
+                  <div className="plan-screen__daily-icon"><Icon size={22} /></div>
+                  <span>{label}</span>
+                  <span className={"plan-screen__check" + (done ? "" : " is-pending")}>{done ? "✓" : ""}</span>
+                </div>
+              );
+            })}
           </div>
         </section>
 
