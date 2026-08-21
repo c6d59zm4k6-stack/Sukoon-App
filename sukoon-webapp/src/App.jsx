@@ -62,7 +62,7 @@ export default function App() {
     return (
       <div className="app-shell">
         <PlanQuestionnaire
-          journeys={profile.journeys}
+          profile={profile}
           onBack={() => setStage("journey")}
           onContinue={({ answers, plan }) => {
             setProfile((p) => ({ ...p, quizAnswers: answers, plan }));

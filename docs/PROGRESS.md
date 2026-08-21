@@ -118,6 +118,57 @@ Onboarding order (`App.jsx` `stage`): **Splash → About You → Choose Journey 
 - `src/data/journeys.js` (new, 2026-08-21) — the `JOURNEYS` list (id/emoji/title/desc), lifted out of `ChooseJourney.jsx` so `Home`/`Profile`/the plan generator can share one source of truth via `journeyLabel()`/`journeyEmoji()`/`journeyById()`.
 - `src/data/planTemplates.js` (new, 2026-08-21) — `buildPlan(journeyIds, answers)`, the mock roadmap generator. One fixed 3-phase framework used for every journey (Lifestyle Foundations → Medical Care & Supervision → Consistency & Tracking — confirmed with the human: any lifestyle/age-based condition needs this same combination), with per-journey action content (`JOURNEY_ACTIONS`) filling each phase. If more than one journey was chosen, 1-2 actions from the secondary journey(s) get merged into the primary journey's phases (capped at 4 actions/phase).
 
+## Porting the real Plan Questionnaire — IMPLEMENTED 2026-08-21 (untested live — see below)
+
+Human shared the full source of the reference tool (https://pcos-root-plan.tiiny.site), confirmed going the AI-backed route (Option A below), confirmed the Vercel deployment shape, and asked to build it. Built the same session. **What's not yet verified: the actual live Groq call** — Vite's dev server doesn't execute `api/*.js` (that's Vercel-only runtime), so this was verified locally with the frontend logic exercised against a mocked `fetch` response, not a real API round-trip. First deploy is the real test — see "To deploy" below.
+
+**Files added/changed:**
+- `sukoon-webapp/api/plan-quiz.js` (new) — the serverless endpoint, copied from `api/groq-classify.js`'s pattern (native Groq call, key server-side only).
+- `sukoon-webapp/src/data/planQuizPrompt.js` (new) — `buildSystemPrompt(profile)`, adapted from the reference's system prompt: same 14 questions, same `<<<PLAN>>>` JSON contract, but re-voiced for Sukoon and **told to skip name/age if already known from onboarding** and to weight its questions toward whichever journey(s) the user already picked.
+- `sukoon-webapp/src/data/aiPlanMapper.js` (new) — `extractAiPlan()`/`messageBeforePlan()` (parse the `<<<PLAN>>>` block out of a reply) and `mapAiPlanToAppPlan()`, the deliberate "not 1:1" translation: `plate`+`movement` → the "Lifestyle Foundations" phase's actions, `tests`+`clinician` → "Medical Care & Supervision", `timeline` → "Consistency & Tracking" — so the existing phases/`ProgressRing`/Home-snippet machinery keeps working unchanged, while `typeProfile`/`tests`/`timeline` are also kept in full fidelity as their own fields for the two new dedicated Plan-tab sections (below) rather than being flattened into plain action-item text and losing their notes/tags.
+- `sukoon-webapp/src/screens/onboarding/PlanQuestionnaire.jsx` — fully rewritten from the chip-select wizard into a real chat thread (assistant/user bubbles, free-text input, typing-dots while loading, `**bold**` markdown rendering since the prompt uses it for the question itself). Includes an **approximate** progress bar (user-turn count / 14, capped at 90% until a plan is actually returned) — this is the "1/n questions" indicator asked for earlier; approximate because an adaptive LLM conversation doesn't have a fixed length. Also has an error-recovery path: if the API call fails, a "Skip for now, use a starter plan instead" link falls back to the old static `buildPlan()` template generator (kept around specifically for this) rather than dead-ending the user.
+- `sukoon-webapp/src/screens/Plan.jsx` / `.css` — two new sections: "My Likely Type" (driver/overlay/rule-out tags + explanation, only rendered when `profile.plan.typeProfile` exists) and "Tests to Get" (each test with its note and a colored tag badge — priority/confirmatory/rule_out/base).
+- `sukoon-webapp/src/App.jsx` — `PlanQuestionnaire` now receives the full `profile` object (was just `journeys`) so it can personalize/skip questions.
+
+**Two real CSS bugs found and fixed during this pass** (both classic specificity/source-order traps, worth remembering for this codebase): (1) the generic `.plan-screen__badge` base rule was declared *after* all its color modifiers in the file — equal specificity, so the later generic rule was winning and silently flattening every badge (phase status AND the new test tags) to the same sage color; fixed by moving the base rule before its modifiers. (2) `.plan-screen__phase-text span` (an element+class descendant selector) was beating `.plan-screen__badge--current`'s single-class selector on specificity, so "Current"'s text stayed the muted default color instead of white; fixed by qualifying the modifiers as `.plan-screen__badge.plan-screen__badge--current` etc. (two classes, higher specificity than one class + one element). Both were caught by an actual screenshot check, not assumed away — worth re-checking badge colors specifically if this file gets touched again.
+
+### To deploy (do this before it works at all)
+
+1. In Vercel, open the **`sukoon-webapp` project's** settings (not the root/chat-app project) → Environment Variables → add `GROQ_API_KEY` (same secret value already used by the root project's `GROQ_API_KEY` is fine to reuse, or issue a fresh key — either way it's a separate env var entry scoped to this project).
+2. Push to `main` — Vercel auto-deploys `sukoon-webapp` on every push, and `sukoon-webapp/api/plan-quiz.js` will be picked up automatically as a serverless function (zero extra Vercel config needed, no `vercel.json` required for a plain `.js` function).
+3. **This stays at 2 Vercel projects total** — the new function deploys as part of the existing `sukoon-webapp` project, not a new one, since Vercel scopes `api/` folders to whichever project's Root Directory contains them.
+4. First real test: go through the full onboarding flow on the live deployment and confirm a real Groq reply comes back (check the browser Network tab for the `/api/plan-quiz` call, and Vercel's function logs if it errors — `console.error` calls in `plan-quiz.js` will show up there).
+
+### What the reference tool actually is (this matters — it's not what we built)
+
+**⚠ Security note, not a build task:** the reference tool's source has a live Groq API key hardcoded directly in client-side JS (`DEMO_KEY = 'gsk_...'`), shipped to a public static site — anyone can view-source and use it. Flagged to the human directly; they may want to revoke it on Groq's console independent of any of this work. **Do not port that pattern.** If we go the AI-backed route below, the key must live server-side, exactly like the existing chat app already does it (`api/chat.js` — a Vercel function that keeps `GROQ_API_KEY` out of the browser). That pattern already exists in this repo and should be reused, not reinvented.
+
+### What the reference tool actually is (this matters — it's not what we built)
+
+Our `PlanQuestionnaire.jsx` is a **static, local, rule-based** 5-question chip-select wizard that deterministically maps answers to one of a few canned plan templates (`buildPlan()` in `planTemplates.js`) — no network call, no AI.
+
+The reference tool is a **real LLM conversation**: free-text chat with Groq (`llama-3.3-70b-versatile`), driven by one large system prompt that tells the model to ask ~14 questions one at a time in natural language, then — after ~14 exchanges — emit a structured JSON block (`<<<PLAN>>>...<<<END_PLAN>>>`) that the frontend parses and renders as a rich result card. The model is doing real work here: interpreting free-text answers, classifying the user into a "driver" profile, and writing personalised copy. This is a materially different (and materially more expensive/complex) feature than what exists today.
+
+**Reference's 14 questions, in order** (from its system prompt): first name, age, height & weight, period regularity (regular 21-35 days / irregular / mostly absent), acne/unwanted hair/hair thinning (which ones), fatigue/cravings/belly weight, which symptom bothers them most, post-meal energy pattern, gut symptoms (bloating/IBS/antibiotics), diet type (veg/vegan/non-veg/pescatarian), cuisine, food avoidances, work situation (desk/active/shift/WFH/student), main goal (fertility/weight/skin & hair/energy/regular cycles/general health). Our current 5 questions are a much shorter, inferred approximation of this.
+
+**Reference's output structure** (the `<<<PLAN>>>` JSON) is much richer than our `{ phases: [...] }`:
+- `profile`: a `title` + `mainDriver` (one of: Insulin-driven / Gut-inflammation-driven / Androgen-driven / Stress-driven) + optional `overlay` (androgen/metabolic/stress) + `ruleOut` (always thyroid/prolactin) + a 2-sentence `explanation` referencing the user's own words.
+- `tests`: array of `{ name, note, tag }` where tag is `priority | confirmatory | rule_out | base` — e.g. always TSH+prolactin (rule_out) and Vitamin D+lipids (base); fasting insulin+OGTT if insulin-driven (priority); testosterone/DHEAS if androgen (confirmatory); CRP/ESR if gut-driven (confirmatory).
+- `plate` (3 short diet tips, cuisine-aware) + `plateNote`.
+- `movement` (2-3 tips, matched to work type) + `movementNote`.
+- `clinician` (2-4 things to discuss with a real doctor, explicitly "don't start on your own") + `clinicianNote`.
+- `timeline`: 3 checkpoints (`1-2 WEEKS`, `2-3 MONTHS`, `~3 MONTHS`) each with a `when`/`what`.
+
+Visually, the reference is a scrolling chat thread (assistant/user bubbles, typing-dots loading state), not a one-question-per-screen wizard like ours.
+
+### Decision (2026-08-21): Option A — fully AI-backed, matching the reference. Built same session — see "IMPLEMENTED" summary and file list above.
+
+**Still open:**
+1. Live-deploy verification — see "To deploy" above. Nothing below matters until this is confirmed working end-to-end on Vercel.
+2. Exact question list is the reference's 14, kept close to verbatim (re-voiced, not reworded question-by-question) — human hasn't reviewed the adapted prompt text itself yet.
+3. `profile.journeys` is passed to the AI as context (told to weight questions toward the chosen journey(s)) but the model's actual behavior here is unverified without a live run.
+4. Whether the `plate`/`movement`→lifestyle, `tests`/`clinician`→medical, `timeline`→consistency mapping (see `aiPlanMapper.js` above) is the right long-term shape, or should evolve once real AI output can be seen — it's a reasoned first cut, not signed off as final.
+
 ## Suggested next steps, in order
 
 1. ~~Rebuild the **Start/splash screen**~~ — **parked at ~80% by human's own
@@ -146,6 +197,33 @@ Onboarding order (`App.jsx` `stage`): **Splash → About You → Choose Journey 
   (pcos-root-plan.tiiny.site); the other 4 questions were inferred, not
   confirmed word-for-word with the human. Revisit if the human has a
   specific list in mind.
+- **The questionnaire built here is explicitly a first-pass scaffold, not
+  the final port** — confirmed twice by the human on 2026-08-21. First,
+  right after reviewing this build: "in the future, we will have to port
+  the questionnaire to this app, and the results integrated into the plan
+  tab." Then again after seeing it live: "i see that you haven't
+  integrated the same questionnaire as the link that i had shared with
+  you. it's fine, but we will need to modify it." Read both as: a fuller
+  port of the actual reference questionnaire's real question set — and a
+  tighter integration of its results into Plan — is still expected future
+  work, not something this pass finished. Don't treat
+  `PlanQuestionnaire.jsx` / `buildPlan()` as done; they're the scaffold
+  this future work replaces or substantially extends. **Human explicitly
+  said to hold off on this — do not start it without being asked.**
+- **Question-progress indicator should be more visual** (human, 2026-08-21):
+  "when we are asking the questions, we should put in some sort of tab or
+  something saying 1/n questions." Currently `PlanQuestionnaire.jsx`
+  already shows a plain text subtitle ("Question 1 of 5") via
+  `OnboardingHeader`'s subtitle prop — the human wants something more
+  visual (progress bar, step dots/tabs), not just text. **Also explicitly
+  told to hold off — do not implement without being asked.**
+- **Quiz → Home/Plan connection wasn't visually obvious** (human, same
+  message: "i couldn't see how the first screens and questionnaire led
+  to this home screen"). Completing the quiz currently jumps straight to
+  Home with no transition or confirmation that a plan was just built —
+  worth a "your plan is ready" moment or some other visible link between
+  finishing the quiz and what shows up on Home/Plan, when this area gets
+  revisited.
 - **"Sukoon noticed" copy** (2026-08-21) — the 2-3 canned messages on Home
   are a first draft, not signed-off final copy.
 - **Custom illustrated icons** — Choose Journey, its tag chips, and Home's

@@ -17,9 +17,12 @@ const REMINDERS = [
 ];
 
 const STATUS_LABEL = { current: "Current", upcoming: "Upcoming", done: "Done" };
+const TEST_TAG_LABEL = { priority: "Priority", confirmatory: "Confirmatory", rule_out: "Rule out", base: "Baseline" };
 
 export default function Plan({ profile }) {
   const phases = profile?.plan?.phases ?? [];
+  const typeProfile = profile?.plan?.typeProfile;
+  const tests = profile?.plan?.tests ?? [];
   const [expandedId, setExpandedId] = useState(
     () => phases.find((p) => p.status === "current")?.id
   );
@@ -33,6 +36,21 @@ export default function Plan({ profile }) {
           <span className="plan-screen__hint-icon"><Heart size={18} /></span>
           <p>Small daily steps can help you feel more like you again.</p>
         </div>
+
+        {typeProfile && (
+          <section>
+            <h2 className="section-title">My Likely Type</h2>
+            <div className="card plan-screen__type">
+              <div className="plan-screen__type-tags">
+                <span className="plan-screen__type-tag">{typeProfile.mainDriver}</span>
+                {typeProfile.overlay && <span className="plan-screen__type-tag plan-screen__type-tag--overlay">{typeProfile.overlay}</span>}
+                {typeProfile.ruleOut && <span className="plan-screen__type-tag plan-screen__type-tag--ruleout">Rule out: {typeProfile.ruleOut}</span>}
+              </div>
+              <strong className="plan-screen__type-title">{typeProfile.title}</strong>
+              <p>{typeProfile.explanation}</p>
+            </div>
+          </section>
+        )}
 
         {phases.length > 0 && (
           <section>
@@ -79,6 +97,25 @@ export default function Plan({ profile }) {
                   </div>
                 );
               })}
+            </div>
+          </section>
+        )}
+
+        {tests.length > 0 && (
+          <section>
+            <h2 className="section-title">Tests to Get</h2>
+            <div className="card plan-screen__tests">
+              {tests.map((t) => (
+                <div className="plan-screen__test" key={t.name}>
+                  <div className="plan-screen__test-text">
+                    <strong>{t.name}</strong>
+                    <span>{t.note}</span>
+                  </div>
+                  <span className={"plan-screen__badge plan-screen__badge--" + (t.tag || "base")}>
+                    {TEST_TAG_LABEL[t.tag] || "Test"}
+                  </span>
+                </div>
+              ))}
             </div>
           </section>
         )}

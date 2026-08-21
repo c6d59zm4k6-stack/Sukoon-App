@@ -156,17 +156,27 @@
   color: var(--ink-soft);
 }
 
-.plan-screen__badge--current {
+.plan-screen__badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--sage-soft);
+  color: #4b5c3f;
+  white-space: nowrap;
+}
+
+.plan-screen__badge.plan-screen__badge--current {
   background: var(--indigo-mid);
   color: #fff;
   align-self: flex-start;
 }
 
-.plan-screen__badge--upcoming {
+.plan-screen__badge.plan-screen__badge--upcoming {
   align-self: flex-start;
 }
 
-.plan-screen__badge--done {
+.plan-screen__badge.plan-screen__badge--done {
   background: var(--sage-soft);
   color: #4b5c3f;
   align-self: flex-start;
@@ -205,6 +215,93 @@
   border: 1.5px solid var(--border);
 }
 
+.plan-screen__type-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.plan-screen__type-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  color: var(--ink-soft);
+}
+
+.plan-screen__type-tag--overlay {
+  border-color: var(--marigold);
+  color: var(--marigold-deep);
+}
+
+.plan-screen__type-tag--ruleout {
+  border-color: var(--border);
+  color: #999;
+}
+
+.plan-screen__type-title {
+  display: block;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.15rem;
+  color: var(--indigo-mid-deep);
+  margin-bottom: 8px;
+}
+
+.plan-screen__type p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.plan-screen__tests {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.plan-screen__test {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.plan-screen__test-text strong {
+  display: block;
+  font-size: 0.86rem;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.plan-screen__test-text span {
+  font-size: 0.76rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.plan-screen__badge--priority {
+  background: var(--dawn-pink);
+  color: #7a2e22;
+}
+
+.plan-screen__badge--confirmatory {
+  background: var(--lavender-soft);
+  color: var(--indigo-mid-deep);
+}
+
+.plan-screen__badge--rule_out {
+  background: var(--border);
+  color: #666;
+}
+
+.plan-screen__badge--base {
+  background: var(--sage-soft);
+  color: #4b5c3f;
+}
+
 .plan-screen__reminders {
   display: flex;
   flex-direction: column;
@@ -232,13 +329,3 @@
 }
 .plan-screen__reminder-text strong { font-size: 0.86rem; }
 .plan-screen__reminder-text span { font-size: 0.72rem; color: var(--ink-soft); }
-
-.plan-screen__badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: var(--sage-soft);
-  color: #4b5c3f;
-  white-space: nowrap;
-}
