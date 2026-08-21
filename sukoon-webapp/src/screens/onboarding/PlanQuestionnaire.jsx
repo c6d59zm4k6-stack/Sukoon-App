@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Send } from "lucide-react";
 import OnboardingHeader from "../../components/OnboardingHeader.jsx";
 import { openingMessage, APPROX_QUESTION_COUNT } from "../../data/planQuizPrompt.js";
-import { extractAiPlan, messageBeforePlan, mapAiPlanToAppPlan } from "../../data/aiPlanMapper.js";
+import { extractAiPlan, messageBeforePlan, mapAiPlanToAppPlan, extractQuickReplies } from "../../data/aiPlanMapper.js";
 import { buildPlan as buildFallbackPlan } from "../../data/planTemplates.js";
 import "./PlanQuestionnaire.css";
 
@@ -21,6 +21,7 @@ export default function PlanQuestionnaire({ profile, onBack, onContinue }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [readyPlan, setReadyPlan] = useState(null);
+  const [quickReplies, setQuickReplies] = useState([]);
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -32,12 +33,14 @@ export default function PlanQuestionnaire({ profile, onBack, onContinue }) {
     ? 100
     : Math.min(90, Math.round((userTurns / APPROX_QUESTION_COUNT) * 100));
 
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg = { role: "user", content: input.trim() };
+  const send = async (overrideText) => {
+    const text = (overrideText ?? input).trim();
+    if (!text || loading) return;
+    const userMsg = { role: "user", content: text };
     const updated = [...messages, userMsg];
     setMessages(updated);
     setInput("");
+    setQuickReplies([]);
     setLoading(true);
     setError(null);
     try {
@@ -50,9 +53,13 @@ export default function PlanQuestionnaire({ profile, onBack, onContinue }) {
       if (!res.ok) throw new Error(data?.error || "Request failed");
 
       const aiPlan = extractAiPlan(data.text);
-      const visibleText = aiPlan ? messageBeforePlan(data.text) : data.text;
+      const rawVisible = aiPlan ? messageBeforePlan(data.text) : data.text;
+      const { text: visibleText, options } = extractQuickReplies(rawVisible);
       if (visibleText) {
         setMessages((prev) => [...prev, { role: "assistant", content: visibleText }]);
+      }
+      if (!aiPlan) {
+        setQuickReplies(options);
       }
       if (aiPlan) {
         setReadyPlan(mapAiPlanToAppPlan(aiPlan));
@@ -121,6 +128,20 @@ export default function PlanQuestionnaire({ profile, onBack, onContinue }) {
               Skip for now, use a starter plan instead
             </button>
           )}
+          {quickReplies.length > 0 && !loading && (
+            <div className="chip-row plan-quiz__quick-replies">
+              {quickReplies.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className="chip"
+                  onClick={() => send(option)}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="plan-quiz__input-row">
             <textarea
               value={input}
@@ -132,7 +153,7 @@ export default function PlanQuestionnaire({ profile, onBack, onContinue }) {
             <button
               type="button"
               className="plan-quiz__send"
-              onClick={send}
+              onClick={() => send()}
               disabled={!input.trim() || loading}
               aria-label="Send"
             >

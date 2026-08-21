@@ -115,6 +115,10 @@
   margin-bottom: 8px;
 }
 
+.plan-quiz__quick-replies {
+  margin-bottom: 10px;
+}
+
 .plan-quiz__input-row {
   display: flex;
   align-items: flex-end;

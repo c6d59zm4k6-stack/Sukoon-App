@@ -78,3 +78,21 @@ export function extractAiPlan(replyText) {
 export function messageBeforePlan(replyText) {
   return replyText.split("<<<PLAN>>>")[0].trim();
 }
+
+// Pulls a "QUICK_REPLIES: A | B | C" line out of a reply (see
+// planQuizPrompt.js) and returns the visible message with that line
+// stripped, plus the parsed options (empty array if there was no line —
+// the question needs a real typed answer instead).
+export function extractQuickReplies(replyText) {
+  const lines = replyText.split("\n");
+  const markerIndex = lines.findIndex((l) => l.trim().startsWith("QUICK_REPLIES:"));
+  if (markerIndex === -1) return { text: replyText, options: [] };
+  const options = lines[markerIndex]
+    .trim()
+    .slice("QUICK_REPLIES:".length)
+    .split("|")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const text = lines.filter((_, i) => i !== markerIndex).join("\n").trim();
+  return { text, options };
+}
