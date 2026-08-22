@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { ShieldCheck, Clock, Lock, Video, Star, Cloud, MapPin, Phone, Users, CheckCircle2, X } from "lucide-react";
+import { ShieldCheck, Clock, Lock, Video, Cloud, MapPin, Phone, Users, CheckCircle2, X } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
+import ExpertCard from "../components/ExpertCard.jsx";
 import { SPECIALTIES, EXPERTS, CLINIC, clinicMapsUrl, formatPhone } from "../data/experts.js";
 import "./Experts.css";
 
@@ -31,6 +32,11 @@ export default function Experts({ onBack, onOpenConcierge }) {
     setSpecialty(id);
     setConfirmation(null);
   };
+
+  const requestOnline = (expert) =>
+    setConfirmation(`Online consultation requested with ${expert.name}. We'll send you the video link shortly.`);
+  const requestBook = (expert) =>
+    setConfirmation(`Request sent to ${expert.name}. Our team will call you to confirm your slot.`);
 
   return (
     <div className="experts-screen">
@@ -94,106 +100,91 @@ export default function Experts({ onBack, onOpenConcierge }) {
             <h2 className="section-title">{specialty ? `${specialtyTitle} experts` : "Top experts in your area"}</h2>
             <div className="experts-screen__doctor-list">
               {matchingExperts.map((e) => (
-                <div className="card experts-screen__doctor" key={e.name}>
-                  <div className="experts-screen__row">
-                    <div className="experts-screen__avatar">{e.name.split(" ")[1]?.[0] ?? e.name[0]}</div>
-                    <div className="experts-screen__info">
-                      <strong>{e.name}</strong>
-                      <span>{e.role}</span>
-                      <span className="experts-screen__rating"><Star size={12} fill="currentColor" /> {e.rating}</span>
-                    </div>
-                    <div className="experts-screen__book">
-                      <span className={e.avail.includes("today") ? "is-today" : "is-tomorrow"}>{e.avail}</span>
-                      <small>{e.time}</small>
-                    </div>
-                  </div>
-                  <div className="experts-screen__connect-row">
-                    <a
-                      className="experts-screen__connect-pill"
-                      href={clinicMapsUrl()}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <MapPin size={13} /> {CLINIC.name}
-                    </a>
-                    <button
-                      type="button"
-                      className="experts-screen__connect-pill"
-                      onClick={() => setConfirmation(`Online consultation requested with ${e.name}. We'll send you the video link shortly.`)}
-                    >
-                      <Video size={13} /> Online
-                    </button>
-                    {CLINIC.phone && (
-                      <a className="experts-screen__connect-pill" href={`tel:+91${CLINIC.phone}`}>
-                        <Phone size={13} /> Call
-                      </a>
-                    )}
-                  </div>
-                </div>
+                <ExpertCard key={e.name} expert={e} onOnline={() => requestOnline(e)} onBook={() => requestBook(e)} />
               ))}
             </div>
           </section>
         )}
 
         {specialty && mode === "clinic" && (
-          <section>
-            <h2 className="section-title">Visit a clinic</h2>
-            <div className="card experts-screen__clinic">
-              <div className="experts-screen__clinic-header">
-                <span className="experts-screen__clinic-icon"><MapPin size={20} /></span>
-                <div className="experts-screen__clinic-text">
-                  <strong>{CLINIC.name}</strong>
-                  <span>{CLINIC.address}</span>
-                  <span>{CLINIC.hours}</span>
+          <>
+            <section>
+              <h2 className="section-title">Visit a clinic</h2>
+              <div className="card expert-card">
+                <div className="expert-card__top">
+                  <div className="expert-card__avatar-wrap">
+                    <div className="expert-card__avatar expert-card__avatar--icon"><MapPin size={20} /></div>
+                  </div>
+                  <div className="expert-card__info">
+                    <strong>{CLINIC.name}</strong>
+                    <span className="expert-card__role">{CLINIC.address}</span>
+                  </div>
+                  <div className="expert-card__avail">
+                    <small>{CLINIC.hours}</small>
+                  </div>
+                </div>
+                <div className="expert-card__actions">
+                  <a
+                    className="expert-card__online-btn"
+                    href={clinicMapsUrl()}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <MapPin size={13} /> Directions
+                  </a>
+                  {CLINIC.phone && (
+                    <a className="expert-card__book-btn" href={`tel:+91${CLINIC.phone}`}>
+                      <Phone size={13} /> {formatPhone(CLINIC.phone)}
+                    </a>
+                  )}
                 </div>
               </div>
-              <div className="experts-screen__clinic-actions">
-                <a
-                  className="experts-screen__connect-pill"
-                  href={clinicMapsUrl()}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <MapPin size={13} /> Directions
-                </a>
-                {CLINIC.phone && (
-                  <a className="experts-screen__connect-pill" href={`tel:+91${CLINIC.phone}`}>
-                    <Phone size={13} /> {formatPhone(CLINIC.phone)}
-                  </a>
-                )}
+            </section>
+
+            <section>
+              <h2 className="section-title">Doctors at this clinic</h2>
+              <div className="experts-screen__doctor-list">
+                {matchingExperts.map((e) => (
+                  <ExpertCard key={e.name} expert={e} onOnline={() => requestOnline(e)} onBook={() => requestBook(e)} />
+                ))}
               </div>
-              <button
-                className="experts-screen__book-btn experts-screen__clinic-cta"
-                onClick={() => setConfirmation(`Got it — ${CLINIC.name}. Our team will call you to confirm a slot.`)}
-              >
-                Book at this clinic
-              </button>
-            </div>
-          </section>
+            </section>
+          </>
         )}
 
         {specialty && mode === "online" && (
-          <section>
-            <h2 className="section-title">Online consultation</h2>
-            <div className="card experts-screen__online">
-              <span className="experts-screen__clinic-icon"><Video size={20} /></span>
-              <div className="experts-screen__clinic-text">
-                <strong>Consult from home via video call</strong>
-                <span>Pick a slot that works for you</span>
+          <>
+            <section>
+              <h2 className="section-title">Online consultation</h2>
+              <div className="card experts-screen__online">
+                <span className="experts-screen__clinic-icon"><Video size={20} /></span>
+                <div className="experts-screen__clinic-text">
+                  <strong>Consult from home via video call</strong>
+                  <span>Pick a doctor below, or grab a quick slot</span>
+                </div>
               </div>
-            </div>
-            <div className="experts-screen__slot-row">
-              {ONLINE_SLOTS.map((slot) => (
-                <button
-                  key={slot}
-                  className="chip"
-                  onClick={() => setConfirmation(`Online consultation requested for ${slot}. We'll send you the video link shortly.`)}
-                >
-                  {slot}
-                </button>
-              ))}
-            </div>
-          </section>
+              <div className="experts-screen__doctor-list">
+                {matchingExperts.map((e) => (
+                  <ExpertCard key={e.name} expert={e} onOnline={() => requestOnline(e)} onBook={() => requestBook(e)} />
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="section-title">Or pick a quick slot</h2>
+              <div className="experts-screen__slot-row">
+                {ONLINE_SLOTS.map((slot) => (
+                  <button
+                    key={slot}
+                    className="chip"
+                    onClick={() => setConfirmation(`Online consultation requested for ${slot}. We'll send you the video link shortly.`)}
+                  >
+                    {slot}
+                  </button>
+                ))}
+              </div>
+            </section>
+          </>
         )}
 
         <button className="card experts-screen__quiz" onClick={onOpenConcierge}>

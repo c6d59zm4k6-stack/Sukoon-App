@@ -102,18 +102,6 @@
   flex-shrink: 0;
 }
 
-.experts-screen__clinic {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.experts-screen__clinic-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .experts-screen__online {
   display: flex;
   align-items: center;
@@ -138,16 +126,6 @@
 .experts-screen__clinic-text strong { font-size: 0.86rem; color: var(--ink); }
 .experts-screen__clinic-text span { font-size: 0.74rem; color: var(--ink-soft); }
 
-.experts-screen__clinic-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.experts-screen__clinic-cta {
-  width: 100%;
-}
-
 .experts-screen__slot-row {
   display: flex;
   flex-wrap: wrap;
@@ -160,39 +138,6 @@
   gap: 12px;
 }
 
-.experts-screen__doctor {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.experts-screen__row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.experts-screen__connect-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-}
-
-.experts-screen__connect-pill {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--indigo-mid-deep);
-  background: var(--lavender-soft);
-  padding: 6px 12px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
 .experts-screen__avatar {
   width: 42px; height: 42px; flex-shrink: 0;
   border-radius: 50%;
@@ -202,38 +147,10 @@
   display: flex; align-items: center; justify-content: center;
 }
 
-.experts-screen__info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.experts-screen__info strong { font-size: 0.84rem; }
-.experts-screen__info span { font-size: 0.7rem; color: var(--ink-soft); }
 .experts-screen__rating {
   display: flex; align-items: center; gap: 3px;
   color: var(--marigold-deep) !important;
   font-weight: 700;
-}
-
-.experts-screen__book {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-.experts-screen__book span { font-size: 0.68rem; font-weight: 700; }
-.experts-screen__book .is-today { color: var(--online-dot); }
-.experts-screen__book .is-tomorrow { color: var(--marigold-deep); }
-.experts-screen__book small { font-size: 0.66rem; color: var(--ink-soft); }
-
-.experts-screen__book-btn {
-  background: var(--lavender);
-  color: var(--indigo-mid-deep);
-  font-weight: 700;
-  font-size: 0.72rem;
-  padding: 6px 14px;
-  border-radius: 999px;
 }
 
 .experts-screen__quiz {
