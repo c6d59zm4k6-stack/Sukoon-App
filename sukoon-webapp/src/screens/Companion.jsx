@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, MoreVertical, ChevronRight } from "lucide-react";
 import { useCompanionEngine } from "../hooks/useCompanionEngine.js";
 import "./Companion.css";
 
@@ -235,7 +234,12 @@ export default function Companion({ profile }) {
         </div>
         <div className="companion__header-text">
           <h1>Sukoon</h1>
-          <p className="companion__tagline">Always here to listen</p>
+          <p className="companion__tagline">
+            <svg className="companion__tagline-leaf" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#5E9C5B" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 3C7 3 4 7 4 12c0 5 4 8 8 8 0-6 0-11 5-15-3 0-9 0-5 8" />
+            </svg>
+            Always here to listen
+          </p>
         </div>
         <div className="companion__header-actions">
           <button type="button" className="companion__icon-btn" onClick={showHelp}>Need help now</button>
@@ -248,13 +252,19 @@ export default function Companion({ profile }) {
               aria-expanded={moreOpen}
               aria-label="More options"
             >
-              <MoreVertical size={18} />
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                <circle cx="5" cy="12" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="19" cy="12" r="2" />
+              </svg>
             </button>
             {moreOpen && (
               <div className="companion__more-panel">
                 <button type="button" className="companion__more-item" onClick={() => { setMoreOpen(false); setMemoryOpen(true); }}>
                   <span>Memory</span>
-                  <ChevronRight size={16} />
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
                 </button>
               </div>
             )}
@@ -265,6 +275,13 @@ export default function Companion({ profile }) {
       <div className="companion__chat">
         <div className="companion__hero">
           <p>What's on your mind today?</p>
+          <div className="companion__hero-divider">
+            <span />
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 3C7 3 4 7 4 12c0 5 4 8 8 8 0-6 0-11 5-15-3 0-9 0-5 8" />
+            </svg>
+            <span />
+          </div>
         </div>
         {bubbles.map((b) => <CompanionBubble key={b.id} bubble={b} onChipTap={handleChipTap} />)}
         {typing && <TypingIndicator />}
@@ -281,10 +298,19 @@ export default function Companion({ profile }) {
           onKeyDown={handleKeyDown}
         />
         <button type="button" className="companion__send-btn" onClick={handleSend} disabled={sending} aria-label="Send">
-          <Send size={18} />
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 18l5-7 3 3 4-6 6 10H3z" fill="#fff" stroke="none" />
+            <path d="M14 9l4-4m0 0h-3.2m3.2 0v3.2" />
+          </svg>
         </button>
       </div>
       <p className="companion__disclaimer">Sukoon offers supportive conversation only — it's not a substitute for professional care.</p>
+      <p className="companion__tagline-footer">
+        <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 20l6-10 4 6 3-4 5 8H3z" />
+        </svg>
+        Breathe · Pause · Be kind
+      </p>
 
       {memoryOpen && (
         <MemoryModal
