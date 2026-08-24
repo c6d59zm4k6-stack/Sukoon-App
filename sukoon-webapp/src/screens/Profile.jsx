@@ -10,7 +10,7 @@ const ROWS = [
   { Icon: LifeBuoy, label: "Help & support" },
 ];
 
-export default function Profile({ profile }) {
+export default function Profile({ profile, onSignOut }) {
   const name = profile?.name || "Ananya";
   return (
     <div className="profile-screen">
@@ -35,7 +35,7 @@ export default function Profile({ profile }) {
           ))}
         </div>
 
-        <button className="profile-screen__signout">
+        <button className="profile-screen__signout" onClick={onSignOut}>
           <LogOut size={16} /> Sign out
         </button>
       </div>

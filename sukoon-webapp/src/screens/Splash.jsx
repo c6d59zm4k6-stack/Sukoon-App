@@ -33,7 +33,7 @@ const SOCIAL_PROVIDERS = [
   { key: "phone", label: "Phone", Icon: Phone },
 ];
 
-export default function Splash({ onBegin, onCreateAccount }) {
+export default function Splash({ onBegin, onCreateAccount, onLogin }) {
   return (
     <div className="splash">
       <div className="splash__art" aria-hidden="true" />
@@ -65,6 +65,9 @@ export default function Splash({ onBegin, onCreateAccount }) {
         </button>
         <p className="splash__account">
           New here? <button className="splash__link" onClick={onCreateAccount}>Create an account</button>
+        </p>
+        <p className="splash__account">
+          Already have an account? <button className="splash__link" onClick={onLogin}>Log in</button>
         </p>
         <p className="splash__divider"><span>or continue with</span></p>
         <div className="splash__social">

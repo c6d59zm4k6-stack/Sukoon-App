@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import BottomNav from "./components/BottomNav.jsx";
 import Splash from "./screens/Splash.jsx";
+import Auth from "./screens/Auth.jsx";
 import ChooseJourney from "./screens/onboarding/ChooseJourney.jsx";
 import AboutYou from "./screens/onboarding/AboutYou.jsx";
 import PlanQuestionnaire from "./screens/onboarding/PlanQuestionnaire.jsx";
@@ -13,75 +14,142 @@ import Profile from "./screens/Profile.jsx";
 import ChatEmbed from "./screens/ChatEmbed.jsx";
 import { buildPlan as buildFallbackPlan } from "./data/planTemplates.js";
 import { todayKey } from "./data/habits.js";
+import { supabase } from "./lib/supabaseClient.js";
+import { EMPTY_PROFILE, fetchUserData, saveProfileFields, saveTracking } from "./data/db.js";
 
-const EMPTY_PLAN = { phases: [], answers: {} };
-const EMPTY_TRACKING = { habitLog: {}, periods: [], symptomLog: {}, weightLog: [] };
+function resumeStageFor(profile) {
+  if (!profile.name) return "about";
+  if (!profile.journeys?.length) return "journey";
+  if (!profile.plan?.phases?.length) return "plan-quiz";
+  return "app";
+}
 
-// stage: "splash" | "about" | "journey" | "plan-quiz" | "app"
+// stage: "loading" | "splash" | "auth" | "about" | "journey" | "plan-quiz" | "app"
 export default function App() {
-  const [stage, setStage] = useState("splash");
+  const [stage, setStage] = useState("loading");
   const [tab, setTab] = useState("home");
   const [careView, setCareView] = useState(null);
-  const [profile, setProfile] = useState({
-    name: "", gender: "", age: "", tags: [], location: "",
-    journeys: [], quizAnswers: {}, plan: EMPTY_PLAN, tracking: EMPTY_TRACKING,
-  });
+  const [session, setSession] = useState(null);
+  const [authMode, setAuthMode] = useState("signup");
+  const [profile, setProfile] = useState(EMPTY_PROFILE);
+
+  const profileRef = useRef(profile);
+  useEffect(() => { profileRef.current = profile; }, [profile]);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(async ({ data: { session: current } }) => {
+      if (!active) return;
+      setSession(current);
+      if (current) {
+        const { profile: p, tracking: t } = await fetchUserData(current.user.id);
+        if (!active) return;
+        const loaded = { ...p, tracking: t };
+        setProfile(loaded);
+        setStage(resumeStageFor(loaded));
+      } else {
+        setStage("splash");
+      }
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
+      if (event === "SIGNED_OUT") {
+        setProfile(EMPTY_PROFILE);
+        setTab("home");
+        setStage("splash");
+      }
+    });
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  const persistTracking = (nextTracking) => {
+    setProfile((p) => ({ ...p, tracking: nextTracking }));
+    if (session?.user?.id) saveTracking(session.user.id, nextTracking);
+  };
 
   const toggleHabit = (habitId) => {
     const key = todayKey();
-    setProfile((p) => {
-      const today = p.tracking.habitLog[key] || {};
-      return {
-        ...p,
-        tracking: {
-          ...p.tracking,
-          habitLog: { ...p.tracking.habitLog, [key]: { ...today, [habitId]: !today[habitId] } },
-        },
-      };
+    const today = profileRef.current.tracking.habitLog[key] || {};
+    persistTracking({
+      ...profileRef.current.tracking,
+      habitLog: { ...profileRef.current.tracking.habitLog, [key]: { ...today, [habitId]: !today[habitId] } },
     });
   };
 
   const logPeriodToday = () => {
     const key = todayKey();
-    setProfile((p) => ({
-      ...p,
-      tracking: {
-        ...p.tracking,
-        periods: p.tracking.periods.includes(key) ? p.tracking.periods : [...p.tracking.periods, key],
-      },
-    }));
+    const { periods } = profileRef.current.tracking;
+    persistTracking({
+      ...profileRef.current.tracking,
+      periods: periods.includes(key) ? periods : [...periods, key],
+    });
   };
 
   const logSymptom = (field, value) => {
     const key = todayKey();
-    setProfile((p) => {
-      const today = p.tracking.symptomLog[key] || { mood: null, energy: null, skin: [] };
-      let updated;
-      if (field === "skin") {
-        const has = today.skin.includes(value);
-        updated = { ...today, skin: has ? today.skin.filter((s) => s !== value) : [...today.skin, value] };
-      } else {
-        updated = { ...today, [field]: today[field] === value ? null : value };
-      }
-      return { ...p, tracking: { ...p.tracking, symptomLog: { ...p.tracking.symptomLog, [key]: updated } } };
+    const today = profileRef.current.tracking.symptomLog[key] || { mood: null, energy: null, skin: [] };
+    let updated;
+    if (field === "skin") {
+      const has = today.skin.includes(value);
+      updated = { ...today, skin: has ? today.skin.filter((s) => s !== value) : [...today.skin, value] };
+    } else {
+      updated = { ...today, [field]: today[field] === value ? null : value };
+    }
+    persistTracking({
+      ...profileRef.current.tracking,
+      symptomLog: { ...profileRef.current.tracking.symptomLog, [key]: updated },
     });
   };
 
   const logWeight = (kg) => {
     const key = todayKey();
-    setProfile((p) => ({
-      ...p,
-      tracking: {
-        ...p.tracking,
-        weightLog: [...p.tracking.weightLog.filter((w) => w.date !== key), { date: key, kg }],
-      },
-    }));
+    const { weightLog } = profileRef.current.tracking;
+    persistTracking({
+      ...profileRef.current.tracking,
+      weightLog: [...weightLog.filter((w) => w.date !== key), { date: key, kg }],
+    });
   };
+
+  if (stage === "loading") {
+    return (
+      <div className="app-shell">
+        <div className="app-loading" role="status" aria-label="Loading" />
+      </div>
+    );
+  }
 
   if (stage === "splash") {
     return (
       <div className="app-shell">
-        <Splash onBegin={() => setStage("about")} onCreateAccount={() => setStage("about")} />
+        <Splash
+          onBegin={() => { setAuthMode("signup"); setStage("auth"); }}
+          onCreateAccount={() => { setAuthMode("signup"); setStage("auth"); }}
+          onLogin={() => { setAuthMode("login"); setStage("auth"); }}
+        />
+      </div>
+    );
+  }
+
+  if (stage === "auth") {
+    return (
+      <div className="app-shell">
+        <Auth
+          initialMode={authMode}
+          onBack={() => setStage("splash")}
+          onAuthed={async (newSession) => {
+            setSession(newSession);
+            const { profile: p, tracking: t } = await fetchUserData(newSession.user.id);
+            const loaded = { ...p, tracking: t };
+            setProfile(loaded);
+            setStage(resumeStageFor(loaded));
+          }}
+        />
       </div>
     );
   }
@@ -93,6 +161,7 @@ export default function App() {
           onBack={() => setStage("splash")}
           onContinue={(aboutData) => {
             setProfile((p) => ({ ...p, ...aboutData }));
+            if (session?.user?.id) saveProfileFields(session.user.id, aboutData);
             setStage("journey");
           }}
         />
@@ -107,14 +176,14 @@ export default function App() {
           onBack={() => setStage("about")}
           onContinue={(journeyIds) => {
             setProfile((p) => ({ ...p, journeys: journeyIds }));
+            if (session?.user?.id) saveProfileFields(session.user.id, { journeys: journeyIds });
             setStage("plan-quiz");
           }}
           onSkip={() => {
-            setProfile((p) => ({
-              ...p,
-              journeys: p.journeys.length ? p.journeys : ["pcos"],
-              plan: buildFallbackPlan(p.journeys.length ? p.journeys : ["pcos"], {}),
-            }));
+            const journeys = profileRef.current.journeys.length ? profileRef.current.journeys : ["pcos"];
+            const plan = buildFallbackPlan(journeys, {});
+            setProfile((p) => ({ ...p, journeys, plan }));
+            if (session?.user?.id) saveProfileFields(session.user.id, { journeys, plan });
             setStage("app");
           }}
         />
@@ -130,6 +199,7 @@ export default function App() {
           onBack={() => setStage("journey")}
           onContinue={({ answers, plan }) => {
             setProfile((p) => ({ ...p, quizAnswers: answers, plan }));
+            if (session?.user?.id) saveProfileFields(session.user.id, { quizAnswers: answers, plan });
             setStage("app");
           }}
         />
@@ -160,7 +230,7 @@ export default function App() {
       case "sukoon":
         return <ChatEmbed />;
       case "profile":
-        return <Profile profile={profile} />;
+        return <Profile profile={profile} onSignOut={() => supabase.auth.signOut()} />;
       default:
         return null;
     }

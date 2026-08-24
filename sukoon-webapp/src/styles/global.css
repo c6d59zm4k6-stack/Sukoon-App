@@ -79,6 +79,25 @@ a { color: inherit; }
   padding: 16px;
 }
 
+.app-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.app-loading::after {
+  content: "";
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--lavender-soft);
+  border-top-color: var(--indigo-mid);
+  animation: app-loading-spin 0.8s linear infinite;
+}
+@keyframes app-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px; height: 1px;
