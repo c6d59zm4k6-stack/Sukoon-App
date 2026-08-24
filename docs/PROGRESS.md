@@ -15,9 +15,14 @@ plans, daily tracking, an AI companion, education, and human experts.
 Sukoon-App/
   index.html, api/, conversation/, scripts/, package.json
     → The ORIGINAL chat app. Vanilla HTML/CSS/JS + Vercel serverless
-      functions (Groq + OpenRouter). DO NOT MODIFY — this is frozen by
-      explicit request. Deployed as its own separate Vercel project
-      (root directory left blank/default).
+      functions (Groq + OpenRouter). Still deployed as its own separate
+      Vercel project (root directory left blank/default), but as of
+      2026-08-24 **nothing in sukoon-webapp links to it anymore** — see
+      "Sukoon companion chat ported in-app" below. Its logic was
+      manually ported (not shared/imported) into sukoon-webapp; this
+      original copy was left untouched as the porting source, not
+      because anything still depends on it. Decommissioning this
+      Vercel project is an open decision for the human, not done yet.
 
   sukoon-design-assets/
     → Mascot, header art, color palette (SVG + PNG + webp), pulled
@@ -25,10 +30,13 @@ Sukoon-App/
       README_DESIGN_ASSETS.txt inside for what each file is.
 
   sukoon-webapp/
-    → The NEW app being built: React + Vite, plain CSS (no Tailwind),
-      design tokens ported 1:1 from the chat app's CSS variables
+    → The main app: React + Vite, plain CSS (no Tailwind), design
+      tokens ported 1:1 from the chat app's CSS variables
       (src/styles/tokens.css). Deployed as a SECOND, separate Vercel
-      project with Root Directory set to `sukoon-webapp`.
+      project with Root Directory set to `sukoon-webapp`. Now has its
+      own Supabase-backed auth/persistence and its own in-app port of
+      the companion chat (see 2026-08-24 section below) — it's no
+      longer just "the new frontend for the old chat app's backend."
 
   docs/  (this folder)
     PROGRESS.md — this file
@@ -38,23 +46,46 @@ Sukoon-App/
 
 ## Why two Vercel projects
 
-One repo, two independent deployments:
-1. **Chat project** — root directory blank, needs env vars
-   `GROQ_API_KEY` and `OPENROUTER_API_KEY`.
-2. **Webapp project** — root directory `sukoon-webapp`, needs env var
-   `VITE_CHAT_APP_URL` set to the chat project's live URL (this is what
-   the Chat tab's iframe points at — see `src/screens/ChatEmbed.jsx`).
+One repo, two independent deployments, each with their own env vars
+(same var name is NOT shared between projects — each needs its own
+entry even if the value happens to be identical):
 
-Both were 404ing at various points during setup due to Root Directory
-misconfiguration and missing env vars — both are now confirmed working
-per the human ("navigation seems to be working").
+1. **Chat project** (root directory blank) — needs `GROQ_API_KEY` and
+   `OPENROUTER_API_KEY`. As of 2026-08-24 this project is orphaned
+   (nothing links to it) but still deployed; see note above.
+2. **Webapp project** (root directory `sukoon-webapp`) — needs:
+   - `GROQ_API_KEY` — for `plan-quiz.js`, `doctor-concierge.js`,
+     `companion-classify.js`.
+   - `OPENROUTER_API_KEY` (added 2026-08-24) — for `companion-chat.js`.
+   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (added 2026-08-24) —
+     client-side Supabase auth/persistence. **Must be prefixed
+     `VITE_`, not `NEXT_PUBLIC_`** — see the Supabase section below,
+     this exact mistake already happened once via the Supabase↔Vercel
+     integration defaulting to Next.js naming.
+   - `VITE_CHAT_APP_URL` — **no longer used** as of 2026-08-24
+     (`ChatEmbed.jsx`, the iframe that read it, was deleted). Safe to
+     remove, not urgent.
+
+Both projects were 404ing at various points during initial setup due
+to Root Directory misconfiguration and missing env vars — both are now
+confirmed working.
 
 ## Architecture decisions already made (don't re-litigate)
 
-- **Chat tab = iframe**, not a rewrite. The original chat app is embedded
-  as-is via `<iframe src={VITE_CHAT_APP_URL}>`. This was chosen
-  specifically so the hand-tuned prompt/safety/crisis-routing logic in
-  the chat app never has to be touched or reimplemented.
+- **Chat tab = ported in-app, no longer an iframe (reversed 2026-08-24).**
+  Originally the original chat app was embedded as-is via
+  `<iframe src={VITE_CHAT_APP_URL}>`, specifically so the hand-tuned
+  prompt/safety/crisis-routing logic would never have to be touched.
+  The human explicitly asked to lift that constraint on 2026-08-24 ("the
+  whole code exists to simply use it to make it into a new in-app
+  companion") so it could access this app's login session and
+  Supabase-stored profile/plan/tracking data — an iframe to a separate
+  Vercel project can never have that access by construction. See the
+  "Sukoon companion chat ported in-app" section below for the full
+  story, including a faithful-port strategy that still preserves that
+  original logic (same statement order, no simplification of the
+  safety-relevant parts) even though it's no longer isolated in an
+  iframe.
 - **Plain CSS over Tailwind**, using the ported token variables, to match
   the bespoke illustrated aesthetic without fighting a utility system.
 - **No router library** — navigation is plain React state
@@ -63,19 +94,22 @@ per the human ("navigation seems to be working").
   2026-08-21 — was 5, see the big restructure noted in the status table and
   Navigation section below). "Care" is `Experts.jsx`, promoted to a
   top-level tab; it used to be reached only from a Home banner via a
-  separate `homeView` state, which no longer exists. "Sukoon" is
-  `ChatEmbed.jsx`, renamed from "Chat" at the human's request — still just
-  the iframe, only the label changed.
-- **Onboarding = Splash → About You → Choose Journey → Plan Questionnaire →
-  main app** (4 steps, was 3 before the questionnaire was added — see
-  status table). `App.jsx` carries a `profile` state object (name, gender,
+  separate `homeView` state, which no longer exists. "Sukoon" is now
+  `Companion.jsx` (was `ChatEmbed.jsx`'s iframe, replaced 2026-08-24 —
+  see below).
+- **Onboarding = Splash → Auth (sign up/log in) → About You → Choose
+  Journey → Plan Questionnaire → main app** (Auth inserted 2026-08-24,
+  right after Splash — every onboarding answer now ties to a real
+  Supabase account from the start, no anonymous-then-migrate logic).
+  `App.jsx` carries a `profile` state object (name, gender,
   age, tags, location, chosen `journeys`, quiz `answers`, generated
   `plan`) threaded down as a prop to `Home`/`Plan`/`Profile`. This didn't
   exist before 2026-08-21 — `AboutYou`'s and `ChooseJourney`'s answers used
   to be silently discarded by `App.jsx`.
-- App name is **Sukoon**; the chat tab itself is just labeled **Chat**
-  (this was a naming correction partway through — Sukoon used to refer
-  to the chat app specifically, now it's the whole product).
+- App name is **Sukoon**; the bottom-nav chat tab is also labeled
+  **Sukoon** (renamed from "Chat" at the human's request early on —
+  Sukoon used to refer to the chat app specifically, now it's the whole
+  product, including this tab).
 
 ## Screen-by-screen status
 
@@ -95,9 +129,10 @@ A **third** same-day round: the human felt the opaque pill hid the sun completel
 | Home | `src/screens/Home.jsx/.css` | **Rebuilt 2026-08-21, content only** (human: "don't change the visualization" — same `.card`/`.section-title`/`ProgressRing`/`TopBar` primitives throughout, no new visual language). Replaced the old 6-item emoji domain grid and the Home-nested "Talk to Experts" banner with 5 new sections per the human's own spec: journey destination (derived from `profile.journeys` via `journeys.js`), a 7-day calendar strip (today highlighted, dot on mock event days — reuses the day-column loop pattern), a "Today's Plan" snippet (current phase from `profile.plan`, taps through to the Plan tab), an "Upcoming Medical Consultations" card (taps through to Care), and a new "Sukoon noticed" insight card (2-3 canned mascot-voiced messages, one shown per visit — copy is a first draft, not final). |
 | Plan | `src/screens/Plan.jsx/.css` | **Restructured 2026-08-21 into a full roadmap.** The old standalone "Today's Focus" card is gone (superseded by Home's teaser of the same data — single source of truth is `profile.plan.phases`, no duplication). New "Full Roadmap" section: one stacked card per phase (title, status badge, `ProgressRing`), only the *current* phase auto-expands its action list, others are tap-to-expand. "Weekly Overview" (7-day bar chart + streak stats) **moved to Track** (human's call, given "Plan = roadmap" vs "Track = trends"). Daily Progress and the full Upcoming Reminders list are unchanged. Light mode only; reference also showed a dark-mode variant, still not addressed. |
 | Track | `src/screens/Track.jsx/.css` | **Extended 2026-08-21.** Kept "Today's log" and the add button as-is; replaced the old static placeholder with the "Weekly Overview" moved from Plan (unchanged content, just relocated) plus a new "Water intake this week" trend chart, reusing the same hand-rolled bar-chart pattern (no chart library in the project, none added). Single metric for now, not a multi-metric switcher. |
-| Care (was "Talk to Experts") | `src/screens/Experts.jsx/.css` | Same screen, **promoted to its own bottom-nav tab 2026-08-21** (previously only reachable via a Home banner + `homeView` state, which no longer exists). No `onBack` is passed anymore since it's a top-level tab now — `TopBar` already omits its header row entirely when `onBack` is absent, so no `Experts.jsx` change was needed for that. (The `onBack`-driven click-through bug fixed earlier the same day, see Navigation section, only ever affected `OnboardingHeader`, not this screen's `TopBar`.) |
-| Profile ("You") | `src/screens/Profile.jsx/.css` | **2026-08-21:** the hardcoded `"PCOS Care · Mental Well-being"` subtitle is now `journeyLabel(profile.journeys)`, genuinely derived from what the user picked in onboarding. First-pass otherwise; no reference screenshot provided. |
-| Sukoon (was "Chat") | `src/screens/ChatEmbed.jsx/.css` | Just an iframe wrapper — the actual UI is the untouched chat app. Only the bottom-nav label changed (2026-08-21), this screen itself is untouched. |
+| Care (was "Talk to Experts") | `src/screens/Experts.jsx/.css` | Same screen, **promoted to its own bottom-nav tab 2026-08-21** (previously only reachable via a Home banner + `homeView` state, which no longer exists). No `onBack` is passed anymore since it's a top-level tab now — `TopBar` already omits its header row entirely when `onBack` is absent, so no `Experts.jsx` change was needed for that. (The `onBack`-driven click-through bug fixed earlier the same day, see Navigation section, only ever affected `OnboardingHeader`, not this screen's `TopBar`.) **Redesigned 2026-08-24** to match a human-supplied reference screenshot: new `src/components/ExpertCard.jsx/.css` (photo-card style — avatar with verified badge + online-status dot, tag pills, rating/experience/distance meta row, Online + Book pill buttons), used across all three modes (By Doctor, Visit a Clinic, Online Consultation). `src/data/experts.js` gained `tags`/`verified: true`/`hours` fields to feed the new card. See the "Sukoon companion chat ported in-app" section below for the rest of that day's work. |
+| Profile ("You") | `src/screens/Profile.jsx/.css` | **2026-08-21:** the hardcoded `"PCOS Care · Mental Well-being"` subtitle is now `journeyLabel(profile.journeys)`, genuinely derived from what the user picked in onboarding. First-pass otherwise; no reference screenshot provided. **2026-08-24:** sign-out button wired to `onSignOut` (was dead UI) — calls `supabase.auth.signOut()`, which resets `App.jsx` state and returns to Splash. |
+| Auth (new) | `src/screens/Auth.jsx/.css` | **New, 2026-08-24.** Email+password sign up / log in toggle screen, inserted right after Splash in the onboarding flow (see Navigation section). Handles Supabase's "check your inbox to confirm" state after signup. Chosen over phone/WhatsApp OTP specifically to avoid Twilio/WhatsApp Business setup — see "Supabase persistence + auth" section below. **No forgot-password flow yet — real gap, not built.** |
+| Sukoon (was "Chat") | `src/screens/Companion.jsx/.css` | **Fully replaced 2026-08-24** — was `src/screens/ChatEmbed.jsx/.css`, a bare iframe wrapping the untouched root chat app; that file is now deleted (confirmed zero remaining references before removal). This is now a real in-app screen: a faithful React port of the root app's entire companion-chat engine (crisis detection, the motivational-interviewing state machine, MITI self-coding, memory extraction — all of it), with the addition of live access to this app's login session and Supabase-stored profile/plan/tracking data, which an iframe to a separate Vercel project could never have. Full story, architecture, and the multi-round bug-fix history (loading spinner, env vars, header art, icon/footer fidelity, typing-glow) are in the dedicated section below — this was the single biggest piece of work done this session and the table row doesn't do it justice, read that section before touching this screen again. |
 
 ## Navigation
 
@@ -198,6 +233,234 @@ Visually, the reference is a scrolling chat thread (assistant/user bubbles, typi
 3. `profile.journeys` is passed to the AI as context (told to weight questions toward the chosen journey(s)) but the model's actual behavior here is unverified without a live run.
 4. Whether the `plate`/`movement`→lifestyle, `tests`/`clinician`→medical, `timeline`→consistency mapping (see `aiPlanMapper.js` above) is the right long-term shape, or should evolve once real AI output can be seen — it's a reasoned first cut, not signed off as final.
 
+## Supabase persistence + auth + AI context wiring, 2026-08-24
+
+Session goal stated by the human: finalize the app across two work streams —
+backend/database integration, and content. Backend chosen first. Everything
+in this section and the next was done in one continuous session.
+
+**Auth.** Email+password via Supabase Auth, explicitly chosen over phone/WhatsApp
+OTP because of Twilio/WhatsApp Business setup friction. New `Auth.jsx/.css`
+screen, inserted right after Splash (see Navigation section for the new
+onboarding order). No forgot-password flow — real, known gap.
+
+**Schema.** `sukoon-webapp/supabase/schema.sql` (new) — two tables:
+- `profiles` (id, name, gender, age, tags, location, journeys, quiz_answers,
+  plan — all jsonb/array as appropriate — created_at, updated_at)
+- `tracking` (user_id, habit_log/periods/symptom_log/weight_log jsonb,
+  created_at, updated_at)
+
+Both have Row Level Security scoped to `auth.uid()`, plus a
+`SECURITY DEFINER` trigger (`handle_new_user()`) that auto-inserts empty
+`profiles`/`tracking` rows the moment someone signs up, so the rest of the
+app never has to special-case "row doesn't exist yet."
+
+**Data layer.** `sukoon-webapp/src/data/db.js` (new) — `fetchUserData(userId)`,
+`saveProfileFields(userId, fields)`, `saveTracking(userId, tracking)`.
+Handles camelCase (app-side) ↔ snake_case (DB-side) mapping, and deliberately
+never throws on a Supabase query error — logs and returns empty defaults
+instead, so a transient DB hiccup can't crash the app.
+
+**`App.jsx` rewrite.** Added `"loading"`/`"auth"` stages, a
+`resumeStageFor(profile)` helper that resumes a returning user at the right
+onboarding step (`!name → "about"`, `!journeys.length → "journey"`,
+`!plan.phases.length → "plan-quiz"`, else straight into the app — so nobody
+who already finished onboarding ever sees it again), a session-bootstrap
+`useEffect` that calls `supabase.auth.getSession()` on load, and every
+tracking mutator (`toggleHabit`, `logPeriodToday`, `logSymptom`, `logWeight`)
+plus the three onboarding-continue handlers now persist via
+`saveProfileFields`/`saveTracking` in addition to updating local state.
+
+**Client setup / config-error surfacing.** `src/lib/supabaseClient.js` reads
+`import.meta.env.VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. If either is
+missing or `createClient` throws, it exports a `supabaseConfigError` string
+instead of a client; `App.jsx` renders a visible "Configuration problem"
+message with the exact missing var names instead of silently rendering a
+blank/broken app. This surfaced a real deployment issue on the first
+deploy — see "Bug-fix rounds" below.
+
+**AI context wiring.** New `src/data/profileContext.js` —
+`summarizePlan(plan)`/`summarizeTracking(tracking)`, pure functions
+returning short natural-language strings (or `null` if there's nothing to
+summarize yet). Both `planQuizPrompt.js` (Plan Quiz) and
+`doctorConciergePrompt.js` (Doctor Concierge) now include the user's tags,
+location, existing plan summary, and tracking summary in their system
+prompt's "ALREADY KNOWN" block — so a returning user isn't re-asked things
+the app already knows, and the AI can reference their actual plan/tracking
+naturally. Same two summarizers are reused a third time by the Companion
+port below, rather than writing a third summarization path.
+
+## Sukoon companion chat ported in-app, 2026-08-24
+
+**Why.** The bottom-nav Sukoon tab used to be `<iframe src={VITE_CHAT_APP_URL}>`
+pointing at the original root chat app's own separate Vercel deployment —
+deliberately, so the hand-tuned prompt/safety/crisis logic would never need
+to be touched. The human explicitly asked to lift that this session: "the
+whole code exists to simply use it to make it into a new in-app companion."
+An iframe to a separate Vercel project can never see this app's login
+session or Supabase data by construction — porting was the only way to get
+the companion access to the user's actual plan/tracking, matching what Plan
+Quiz and Doctor Concierge already had.
+
+**Explicit ground rules, agreed before writing any code:**
+- **Faithful port, not a rewrite.** This is a mental-health-adjacent,
+  safety-tuned feature (crisis detection, an MI state machine, a
+  self-evaluation loop, MITI coaching-quality scoring). Goal was relocation,
+  same statement order throughout, not simplification.
+- **Chat transcripts stay ephemeral** — explicit decision, no Supabase
+  persistence for conversation history in this pass. Only the original
+  app's own `localStorage`-based memory-fact extraction and MITI aggregate
+  stats carry over, using the **same localStorage keys** as the root app
+  (`sukoon_memory`, `sukoon_memory_enabled`, `sukoon_mi_aggregate`,
+  `sukoon_model`) — safe since it's a different origin already.
+- `api/chat-stream.js` (the edge/streaming variant in the root app) is
+  confirmed unused by its own frontend — out of scope, not ported.
+
+**Architecture — three-layer split**, because ~900 lines of tuned state
+machine is not incidental UI glue:
+- `src/lib/companionEngine.js` (new, ~700 lines) — all the ported logic, no
+  React. `createCompanionState()` + `createCompanionEngine(callbacks)`
+  returning `{ sendMessage, init, setProfile, setMemoryEnabled,
+  forgetMemory, getDebugSnapshot, resetAggregate, setModel, showHelp,
+  MODEL_OPTIONS }`. The original's ~30 module-level `let`s became one
+  `state` object closed over by the engine instance — same closure shape as
+  the original, just not module-global.
+- `src/hooks/useCompanionEngine.js` (new) — thin React binding
+  (`useState`/`useEffect`/`useRef` only), wires engine callbacks
+  (`onBubble`, `onUpdateBubble`, `onClearQuickReplies`, `onTypingStart/End`,
+  `onSendingChange`, `onCompactChange`, `onMemoryChange`,
+  `onFidelityUpdate`) to React state.
+- `src/screens/Companion.jsx/.css` (new) — rendering only.
+
+Ported near-line-for-line, same branch/priority order as the source
+(`index.html`'s inline JS + `conversation/prompt.js`): crisis detection
+(`isCrisisMessage`/`CRISIS_PATTERNS`), the classify/focus/readiness
+pipeline, the full MI note-builder chain (`buildStateNote`,
+`buildArbiterNote` and its priority chain — `directAskNote ||
+maxReachedNote || thinReplyNote || tensionNote || focusChangedNote ||
+ventCheckNote || otherStateNote || readinessNote || stageDefaultNote` —
+copied exactly, not reordered), `evaluateReply`/`auditComplexFlag`,
+`codeCompanionTurn` (MITI coding), `extractMemory`,
+`splitIntoBubbles`/`renderBubbleSequence`, `maybeAttachQuickReplies`. DOM
+manipulation became callbacks (`onBubble`, `onUpdateBubble`) instead of
+`appendChild`/`getElementById`.
+
+**Prompt.** `src/data/companionPrompt.js` (new) — verbatim copy of the root
+`conversation/prompt.js` (both `CANONICAL_SYSTEM_PROMPT` and
+`SPECIFIC_QUESTION_SYSTEM_PROMPT` untouched, with a provenance comment
+noting it's a manually-synced copy — the two files will drift over time if
+either is edited without updating the other), plus one additive change:
+`buildConversationPrompt` now accepts a `userContext` string, pushed first
+into `dynamicParts` (ahead of memory/scope) when present. `userContext` is
+built fresh every turn in `companionEngine.js` via
+`buildUserContextBlock(profile)`, reusing `summarizePlan`/`summarizeTracking`
+from `profileContext.js` — same pattern as Plan Quiz/Doctor Concierge, no
+duplicated summarization logic.
+
+**API routes.** `sukoon-webapp/api/companion-chat.js` (new) — copy of root
+`api/chat.js` (OpenRouter-backed; needed a new `OPENROUTER_API_KEY` env var
+on the `sukoon-webapp` Vercel project — see env var list above).
+`sukoon-webapp/api/companion-classify.js` (new) — copy of root
+`api/groq-classify.js` (Groq-direct; reuses the already-configured
+`GROQ_API_KEY`, no new env var needed).
+
+**Deliberate scope cuts:**
+- **Model picker `<select>` dropped, plumbing kept.** It was a dev tool per
+  the source's own comment; letting end users swap the tuned model for an
+  untuned one was judged a small real risk with no user benefit.
+  `MODEL_OPTIONS`/`setModel` etc. all still work via `localStorage.sukoon_model`
+  for engineer QA, just no visible UI. The header's "⋮ more" popover
+  collapsed to a single direct Memory icon button as a result.
+  Debug panel (5-tap-the-mascot gesture, MITI instrumentation viewer) was
+  kept as-is — zero visible change from the source.
+
+**Verification ceiling, same as the Supabase work**: this sandbox's network
+policy blocks outbound calls to hosts not on its allowlist (confirmed for
+`supabase.co`; `openrouter.ai`/`api.groq.com` were never independently
+tested but are almost certainly the same). Everything here was verified as
+far as the sandbox allows — clean `npm run build`, the screen rendering
+correctly against a mocked/local profile, no React console errors — but
+**real multi-turn conversation behavior (crisis-phrase handling, quick
+replies, memory extraction, which arbiter note actually gets picked) has
+never been verified live by anyone yet**, including the human — see Open
+items below.
+
+### Bug-fix rounds after the initial merge (all 2026-08-24)
+
+The human reported these one at a time after merging; each was root-caused
+and fixed as its own small PR rather than batched:
+
+1. **App stuck on loading spinner forever.** `supabase.auth.getSession().then(...)`
+   in `App.jsx` had no `.catch()` — any rejection left `stage` at
+   `"loading"` permanently with no visible error and nothing in the UI to
+   act on. Fixed by adding `.catch()` (falls back to `"splash"` + logs the
+   error) and wrapping the `onAuthed` post-login profile fetch in
+   `try/catch` with the same fallback. (Both fixes are visible in the
+   current `App.jsx` — see the session-bootstrap `useEffect` and the `Auth`
+   screen's `onAuthed` handler.)
+2. **Supabase env vars missing/misnamed.** The Supabase↔Vercel integration
+   pushed vars under Next.js naming (`NEXT_PUBLIC_SUPABASE_URL` etc.)
+   instead of the `VITE_` prefix Vite requires. This is not a naming
+   convention — Vite strips any env var not prefixed `VITE_` out of the
+   client bundle at build time, as a hard security boundary, regardless of
+   what name the code asks for. `supabaseConfigError` (see above) correctly
+   surfaced this as a visible "Configuration problem" screen rather than a
+   silent blank page. Fix was adding `VITE_SUPABASE_URL`/
+   `VITE_SUPABASE_ANON_KEY` as **new** env vars in Vercel (values copied
+   from the existing `NEXT_PUBLIC_*` ones), not renaming the originals —
+   the `NEXT_PUBLIC_*` vars may still be read by other tooling/the old
+   integration, so they were left alone.
+3. **AI backend appeared to not respond** (instant identical fallback
+   replies every time). Diagnosed as the real `/api/companion-chat` call
+   failing fast, but this sandbox cannot reach the live Vercel deployment
+   to inspect the actual error (confirmed blocked via curl). Human
+   self-resolved by re-pasting the `OPENROUTER_API_KEY` value in
+   Vercel — implies the original key was stale/incorrect. OpenRouter
+   confirmed working after that; **Groq-backed classifiers not
+   independently confirmed** (human's own words: "not sure about groq
+   though. probably it's functional").
+4. **Header art missing.** Added `.companion__header-bg`/
+   `.companion__header-scrim` divs + CSS, reusing the same
+   `/brand/sukoon-header-art.webp` asset and mask-image-fade-plus-scrim
+   pattern `TopBar.css` already uses elsewhere in the app.
+5. **Send button, "more" button, Memory chevron, tagline leaf icon, and
+   hero-divider not matching the original.** The initial port had
+   substituted `lucide-react`'s generic icons for several of the source's
+   bespoke inline SVGs (most visibly the send button). Human called this
+   out directly and raised general concern about porting fidelity, since
+   this is meant to be *exactly the same code*, not a redesign. Fixed by
+   extracting the exact original SVGs from the root `index.html` and
+   cross-checking byte-for-byte via `grep`/Python before considering each
+   one resolved — this became the standing verification method for every
+   subsequent icon/asset fix in this round. Also fixed while cross-checking:
+   hero top padding (was 30px, source is 10px).
+6. **Footer missing a line.** Original has both a disclaimer line *and* a
+   separate "Breathe · Pause · Be kind"-style tagline-footer line with a
+   leaf icon; the port only had the disclaimer. Added the missing
+   `<p className="companion__tagline-footer">` + matching CSS (hidden in
+   compact mode, matching source behavior).
+7. **Typing indicator had a glow halo the human didn't remember from the
+   original.** Verified rigorously against source first — the glow ellipse
+   genuinely exists in `index.html` with identical markup/CSS, confirmed by
+   rendering the port in isolation against a fresh extraction of the
+   original and comparing screenshots directly; this was not a porting bug.
+   Rather than keep re-litigating "is this actually different," the human
+   was asked to make an explicit design call given the two matched — chose
+   to remove the glow going forward. Implemented as
+   `.companion-typing-glow { display: none; }` in `Companion.css`.
+
+**Verification technique used throughout**: a temporary local test harness
+(`companion-test.html` + `src/companion-test-main.jsx`) rendered
+`Companion.jsx` in isolation against a mock profile, bypassing the
+now-unreachable-from-this-sandbox Supabase auth flow, screenshotted via
+Playwright with a locally-available Chromium — then deleted every time
+(`rm` + `git status --short` confirmed clean) before committing, so no
+stray test files ever landed in a commit.
+
+**Deleted as cleanup**: `src/screens/ChatEmbed.jsx`, `ChatEmbed.css` (confirmed
+zero remaining references first). `VITE_CHAT_APP_URL` is consequently unused
+— see env var list above.
+
 ## Suggested next steps, in order
 
 1. ~~Rebuild the **Start/splash screen**~~ — **parked at ~80% by human's own
@@ -214,6 +477,28 @@ Visually, the reference is a scrolling chat thread (assistant/user bubbles, typi
    Still worth flagging to the human rather than assuming "done."
 4. Vercel auto-deploys `sukoon-webapp` on every push to `main` (no
    Root Directory changes needed anymore — that's already fixed).
+5. **Verify real multi-turn Companion conversation behavior on the live
+   deployment** (2026-08-24) — nobody has confirmed crisis-phrase handling,
+   quick replies, memory extraction, or which arbiter note actually gets
+   picked in a real conversation yet. Only UI/error-path behavior and one
+   confirmation that "OpenRouter seems to work" exist so far. This is the
+   single most important thing to verify next given it's a
+   safety-critical feature — see the Companion section above for full
+   context.
+6. **Content work stream is still fully open** (2026-08-24) — the session's
+   two declared work streams were backend/database (this session's focus)
+   and content; content hasn't been started. Includes: canned Home-screen
+   copy ("Sukoon noticed" messages, still first-draft), the full Plan
+   Questionnaire port to match the real reference tool's 14 questions (see
+   "Porting the real Plan Questionnaire" section — still a scaffold), and
+   custom illustrated icons replacing emoji placeholders.
+7. **Decommission the old root chat-app Vercel project** — open decision
+   for the human, not done. Nothing in `sukoon-webapp` links to it anymore
+   as of 2026-08-24 (see "Why two Vercel projects" above), but it's still
+   deployed and still costs a `GROQ_API_KEY`/`OPENROUTER_API_KEY` pair if
+   left running.
+8. **Build a forgot-password flow** — real, currently-missing gap in
+   `Auth.jsx` (2026-08-24).
 
 ## Open items / things not yet decided
 
@@ -259,3 +544,39 @@ Visually, the reference is a scrolling chat thread (assistant/user bubbles, typi
   old domain grid all use plain emoji where the original reference/prior
   design intent called for custom painterly illustrations. Needs real
   icon assets to close, same as the splash mascot/hero-photo situation.
+  Still open as of 2026-08-24, unchanged this session.
+- **Forgot-password flow** (2026-08-24) — `Auth.jsx` has sign up and log in,
+  no password-reset path. Real gap, not yet built.
+- **Old root chat-app Vercel project decommissioning** (2026-08-24) — it's
+  orphaned (nothing links to it) but still deployed; whether/when to tear
+  it down is the human's call, not done.
+- **Real multi-turn Companion behavior is unverified live** (2026-08-24) —
+  crisis detection, quick replies, memory extraction, and the MI arbiter's
+  note selection have only been checked against source code and local/mocked
+  rendering, never a real conversation on the live deployment. This
+  sandbox cannot reach the deployed app to test it directly (network policy
+  blocks `supabase.co`/likely `openrouter.ai`/`api.groq.com` too) — needs a
+  human (or a session with unblocked network access) to actually have a
+  conversation with it and watch for: crisis-phrase responses, quick-reply
+  correctness, whether memory facts get extracted/reused correctly across
+  turns, and whether `userContext` (the new profile/plan/tracking summary
+  injected into the prompt) causes any tone drift like over-familiar
+  name-dropping — flagged as a specific risk to watch for when this was
+  built.
+- **Two prompt files will drift** — `sukoon-webapp/src/data/companionPrompt.js`
+  is a manually-synced copy of the root `conversation/prompt.js`, not a
+  shared import (same pattern as `planQuizPrompt.js`/`doctorConciergePrompt.js`
+  already established). If the source prompt is ever tuned further, remember
+  to port the change into `companionPrompt.js` too, and vice versa.
+- **State-of-the-world reminders for whoever picks this up** (2026-08-24):
+  the `sukoon-webapp` Vercel project now needs 4 env vars, not 2 —
+  `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `VITE_SUPABASE_URL`,
+  `VITE_SUPABASE_ANON_KEY` (see "Why two Vercel projects" above for the
+  full list and the `VITE_` vs `NEXT_PUBLIC_` gotcha that already bit us
+  once). On GitHub, clicking a PR's "Update branch" button merges `main`
+  INTO the PR branch — it does not merge the PR itself; use "Merge pull
+  request" to actually land it. Also: pushing new commits to a branch after
+  its PR has already been merged does NOT reopen that PR or create a new
+  one automatically — those commits sit orphaned until a fresh PR is opened
+  for them. Both of these caused real confusion this session (twice, for
+  the second one) — worth remembering before repeating either mistake.
