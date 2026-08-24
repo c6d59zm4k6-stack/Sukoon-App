@@ -49,3 +49,17 @@ export function nextPeriodDate(periods) {
   const nextMs = lastMs + cycleLen * 86400000;
   return new Date(nextMs).toISOString().slice(0, 10);
 }
+
+// Signed day-count to the predicted next period (negative if it's already
+// "due"). Same UTC-midnight math as the rest of this file, exported so
+// callers (e.g. Home's insight messages) don't have to re-derive it from
+// nextPeriodDate's string output with the same timezone risk this file's
+// own parseDateKey comment warns about.
+export function daysUntilNextPeriod(periods, today = new Date()) {
+  if (!periods.length) return null;
+  const cycleLen = estimateCycleLength(periods);
+  const lastMs = parseDateKey(sorted(periods).slice(-1)[0]);
+  const todayMs = parseDateKey(dateKey(today));
+  const nextMs = lastMs + cycleLen * 86400000;
+  return Math.round((nextMs - todayMs) / 86400000);
+}

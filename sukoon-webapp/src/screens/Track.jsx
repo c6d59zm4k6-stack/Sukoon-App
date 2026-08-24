@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CalendarHeart, Scale } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
-import { HABITS, todayKey, lastNDays } from "../data/habits.js";
+import { HABITS, todayKey, lastNDays, currentStreak } from "../data/habits.js";
 import { currentCycleDay, nextPeriodDate } from "../data/cycle.js";
 import "./Track.css";
 
@@ -13,21 +13,6 @@ function habitCompletionPercent(dayLog) {
   if (!dayLog) return 0;
   const done = HABITS.filter((h) => dayLog[h.id]).length;
   return done / HABITS.length;
-}
-
-function computeStreak(habitLog) {
-  let streak = 0;
-  const cursor = new Date();
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const key = todayKey(cursor);
-    const dayLog = habitLog[key];
-    const anyDone = dayLog && Object.values(dayLog).some(Boolean);
-    if (!anyDone) break;
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return streak;
 }
 
 function totalCompletions(habitLog) {
@@ -47,7 +32,7 @@ export default function Track({ profile, onToggleHabit, onLogPeriod, onLogSympto
   const last14 = lastNDays(14);
 
   const weekDays = lastNDays(7);
-  const streak = computeStreak(tracking.habitLog);
+  const streak = currentStreak(tracking.habitLog);
   const goalsCompleted = totalCompletions(tracking.habitLog);
 
   const latestWeight = tracking.weightLog[tracking.weightLog.length - 1];
