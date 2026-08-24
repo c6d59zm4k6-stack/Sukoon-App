@@ -20,9 +20,15 @@
   color: var(--ink-soft);
   font-size: 0.6rem;
   font-weight: 600;
+  line-height: 1.15;
   position: relative;
-  padding: 6px 0 4px;
-  white-space: nowrap;
+  padding: 6px 2px 4px;
+}
+
+/* "Talk to Experts" is the one label long enough to wrap -- let it take
+   two lines instead of forcing nowrap/overflow like the others. */
+.bottom-nav__item span {
+  text-align: center;
 }
 
 .bottom-nav__item.is-active {

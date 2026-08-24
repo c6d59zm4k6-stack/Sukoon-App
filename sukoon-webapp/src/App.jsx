@@ -150,11 +150,7 @@ export default function App() {
   if (stage === "splash") {
     return (
       <div className="app-shell">
-        <Splash
-          onBegin={() => { setAuthMode("signup"); setStage("auth"); }}
-          onCreateAccount={() => { setAuthMode("signup"); setStage("auth"); }}
-          onLogin={() => { setAuthMode("login"); setStage("auth"); }}
-        />
+        <Splash onBegin={() => { setAuthMode("signup"); setStage("auth"); }} />
       </div>
     );
   }

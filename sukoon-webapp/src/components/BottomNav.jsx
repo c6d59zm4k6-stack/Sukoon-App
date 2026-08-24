@@ -5,7 +5,7 @@ const TABS = [
   { id: "home", label: "Home", Icon: Home },
   { id: "plan", label: "Plan", Icon: CalendarCheck },
   { id: "track", label: "Track", Icon: HeartPulse },
-  { id: "care", label: "Care", Icon: Stethoscope },
+  { id: "care", label: "Talk to Experts", Icon: Stethoscope },
   { id: "sukoon", label: "Sukoon", Icon: Cloud },
   { id: "profile", label: "You", Icon: User },
 ];
