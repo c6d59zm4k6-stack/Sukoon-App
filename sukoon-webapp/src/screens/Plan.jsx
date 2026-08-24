@@ -5,12 +5,8 @@ import ProgressRing from "../components/ProgressRing.jsx";
 import { downloadPlanPdf } from "../utils/planPdf.js";
 import { buildReportSummaryText } from "../data/planReport.js";
 import { HABITS, todayKey } from "../data/habits.js";
+import { REMINDERS } from "../data/reminders.js";
 import "./Plan.css";
-
-const REMINDERS = [
-  { title: "Take Letrozole", subtitle: "9:00 AM • Take with water", badge: "Today" },
-  { title: "Follicular scan", subtitle: "Day 10 • 11:30 AM", badge: "Tomorrow" },
-];
 
 const STATUS_LABEL = { current: "Current", upcoming: "Upcoming", done: "Done" };
 const TEST_TAG_LABEL = { priority: "Priority", confirmatory: "Confirmatory", rule_out: "Rule out", base: "Baseline" };
@@ -171,7 +167,7 @@ export default function Plan({ profile }) {
           <h2 className="section-title">Upcoming Reminders</h2>
           <div className="card plan-screen__reminders">
             {REMINDERS.map((r) => (
-              <div className="plan-screen__reminder" key={r.title}>
+              <div className="plan-screen__reminder" key={r.id}>
                 <span className="plan-screen__reminder-icon"><Bell size={18} /></span>
                 <div className="plan-screen__reminder-text">
                   <strong>{r.title}</strong>

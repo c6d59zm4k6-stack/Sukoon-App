@@ -190,6 +190,7 @@
 }
 
 .splash__social-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -200,6 +201,28 @@
   font-size: 0.88rem;
   padding: 12px 6px;
   border-radius: 999px;
+}
+
+/* Not wired up to a real auth flow yet -- disabled + labeled "Soon" rather
+   than a fully interactive-looking button that silently does nothing. */
+.splash__social-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.splash__social-soon {
+  position: absolute;
+  top: -7px;
+  right: -4px;
+  background: var(--indigo-deep);
+  color: #fff;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(20,15,40,0.35);
 }
 
 .splash__social-icon {

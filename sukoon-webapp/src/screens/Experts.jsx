@@ -40,7 +40,7 @@ export default function Experts({ onBack, onOpenConcierge }) {
 
   return (
     <div className="experts-screen">
-      <TopBar title="Talk to Experts" tagline="Trusted care. Human expertise." onBack={onBack} />
+      <TopBar title="Care" tagline="Trusted care. Human expertise." onBack={onBack} />
 
       <div className="experts-screen__content">
         <div className="card experts-screen__trust">

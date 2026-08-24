@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Send, Star, CheckCircle2, X } from "lucide-react";
+import { Send, CheckCircle2, X } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
+import ExpertCard from "../components/ExpertCard.jsx";
 import { conciergeOpeningMessage } from "../data/doctorConciergePrompt.js";
 import { extractQuickReplies, extractRecommendation, messageBeforeRecommendation } from "../data/conciergeMapper.js";
 import { expertByName } from "../data/experts.js";
@@ -102,27 +103,20 @@ export default function DoctorConcierge({ profile, onBack }) {
         )}
 
         {matchedExpert && (
-          <div className="card concierge__recommendation">
-            <div className="concierge__rec-header">
-              <div className="experts-screen__avatar">{matchedExpert.name.split(" ")[1]?.[0] ?? matchedExpert.name[0]}</div>
-              <div>
-                <strong>{matchedExpert.name}</strong>
-                <span>{matchedExpert.role}</span>
-                <span className="experts-screen__rating"><Star size={12} fill="currentColor" /> {matchedExpert.rating}</span>
-              </div>
+          <div className="concierge__recommendation">
+            <ExpertCard
+              expert={matchedExpert}
+              onOnline={() => setConfirmation(`Online consultation requested with ${matchedExpert.name}. We'll send you the video link shortly.`)}
+              onBook={() => setConfirmation(`Request sent to ${matchedExpert.name}. Our team will confirm your slot shortly.`)}
+            />
+            <div className="card concierge__rec-reasons-card">
+              <span className="concierge__rec-reasons-label">Why this match</span>
+              <ul className="concierge__rec-reasons">
+                {(recommendation.reasons || []).map((reason) => (
+                  <li key={reason}><CheckCircle2 size={14} color="var(--online-dot)" /> {reason}</li>
+                ))}
+              </ul>
             </div>
-            <ul className="concierge__rec-reasons">
-              {(recommendation.reasons || []).map((reason) => (
-                <li key={reason}><CheckCircle2 size={14} color="var(--online-dot)" /> {reason}</li>
-              ))}
-            </ul>
-            <button
-              type="button"
-              className="pill-button pill-button--primary concierge__book-cta"
-              onClick={() => setConfirmation(`Request sent to ${matchedExpert.name}. Our team will confirm your slot shortly.`)}
-            >
-              Book appointment
-            </button>
           </div>
         )}
 

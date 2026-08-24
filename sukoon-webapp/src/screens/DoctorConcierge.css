@@ -85,13 +85,19 @@
   margin-top: 6px;
 }
 
-.concierge__rec-header {
+.concierge__rec-reasons-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
 }
-.concierge__rec-header strong { display: block; font-size: 0.9rem; }
-.concierge__rec-header span { font-size: 0.76rem; color: var(--ink-soft); }
+
+.concierge__rec-reasons-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
 
 .concierge__rec-reasons {
   list-style: none;
@@ -108,10 +114,6 @@
   font-size: 0.82rem;
   color: var(--ink);
   line-height: 1.4;
-}
-
-.concierge__book-cta {
-  width: 100%;
 }
 
 .concierge__refine {
