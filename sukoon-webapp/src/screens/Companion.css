@@ -239,8 +239,11 @@
 .companion-typing-cloud { animation: companion-typing-bob 2.4s ease-in-out infinite; transform-origin: 27px 22px; }
 .companion-typing-eyes { animation: companion-typing-glance 4s ease-in-out infinite; transform-origin: 27px 24px; }
 .companion-typing-quill { animation: companion-typing-write 0.85s ease-in-out infinite; transform-origin: 50px 33px; }
-.companion-typing-glow { animation: companion-typing-glow 2.2s ease-in-out infinite; transform-origin: 27px 19px; }
-@keyframes companion-typing-glow { 0%, 100% { opacity: 0.65; transform: scale(1); } 50% { opacity: 1; transform: scale(1.12); } }
+/* Glow ellipse removed per design feedback -- reads as a stray colored
+   halo rather than a subtle effect outside the original's fuller
+   context. display:none rather than deleting the SVG element itself,
+   so the rest of the ported markup/CSS stays untouched. */
+.companion-typing-glow { display: none; }
 .companion-typing-dots { display: flex; gap: 4px; }
 .companion-typing-dots span { width: 5px; height: 5px; background: var(--ink-soft); border-radius: 50%; animation: companion-typing-bounce 1.2s infinite ease-in-out; }
 .companion-typing-dots span:nth-child(2) { animation-delay: 0.15s; }
@@ -250,7 +253,7 @@
 @keyframes companion-typing-glance { 0%, 70%, 100% { transform: translateY(0) scaleY(1); } 75% { transform: translateY(-1.5px) scaleY(1.15); } 80% { transform: translateY(0) scaleY(1); } }
 @keyframes companion-typing-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-3px); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .companion-typing-cloud, .companion-typing-eyes, .companion-typing-quill, .companion-typing-dots span, .companion-typing-glow { animation: none; }
+  .companion-typing-cloud, .companion-typing-eyes, .companion-typing-quill, .companion-typing-dots span { animation: none; }
 }
 
 .companion-crisis-card {
