@@ -14,7 +14,7 @@ import Profile from "./screens/Profile.jsx";
 import Companion from "./screens/Companion.jsx";
 import { buildPlan as buildFallbackPlan } from "./data/planTemplates.js";
 import { todayKey } from "./data/habits.js";
-import { supabase } from "./lib/supabaseClient.js";
+import { supabase, supabaseConfigError } from "./lib/supabaseClient.js";
 import { EMPTY_PROFILE, fetchUserData, saveProfileFields, saveTracking } from "./data/db.js";
 
 function resumeStageFor(profile) {
@@ -37,6 +37,7 @@ export default function App() {
   useEffect(() => { profileRef.current = profile; }, [profile]);
 
   useEffect(() => {
+    if (supabaseConfigError) return; // nothing to bootstrap -- render() shows the error instead
     let active = true;
 
     supabase.auth
@@ -125,6 +126,18 @@ export default function App() {
       weightLog: [...weightLog.filter((w) => w.date !== key), { date: key, kg }],
     });
   };
+
+  if (supabaseConfigError) {
+    return (
+      <div className="app-shell">
+        <div className="app-config-error" role="alert">
+          <strong>Configuration problem</strong>
+          <p>{supabaseConfigError}</p>
+          <p>This is a deployment setup issue, not something to fix by reloading — check the Vercel project's Environment Variables.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (stage === "loading") {
     return (
