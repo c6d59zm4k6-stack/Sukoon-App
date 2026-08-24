@@ -11,7 +11,7 @@ import Track from "./screens/Track.jsx";
 import Experts from "./screens/Experts.jsx";
 import DoctorConcierge from "./screens/DoctorConcierge.jsx";
 import Profile from "./screens/Profile.jsx";
-import ChatEmbed from "./screens/ChatEmbed.jsx";
+import Companion from "./screens/Companion.jsx";
 import { buildPlan as buildFallbackPlan } from "./data/planTemplates.js";
 import { todayKey } from "./data/habits.js";
 import { supabase } from "./lib/supabaseClient.js";
@@ -228,7 +228,7 @@ export default function App() {
           ? <DoctorConcierge profile={profile} onBack={() => setCareView(null)} />
           : <Experts onOpenConcierge={() => setCareView("concierge")} />;
       case "sukoon":
-        return <ChatEmbed />;
+        return <Companion profile={profile} />;
       case "profile":
         return <Profile profile={profile} onSignOut={() => supabase.auth.signOut()} />;
       default:
