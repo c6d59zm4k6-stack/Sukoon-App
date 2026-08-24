@@ -3,17 +3,12 @@ import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
 import { journeyLabel, journeyEmoji } from "../data/journeys.js";
 import { consultationReminders } from "../data/reminders.js";
+import { noticedMessage } from "../data/insights.js";
 import "./Home.css";
 
 const WEEK_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 const TODAY_INDEX = 2; // mock: mid-week
 const EVENT_DAYS = new Set([3, 5]); // mock: days with a reminder/appointment
-
-const NOTICED_MESSAGES = [
-  "Sukoon noticed you've logged water 5 days running — small wins add up 💜",
-  "Sukoon noticed your sleep has been more consistent this week. Keep it up 🌙",
-  "Sukoon noticed it's been a few days since your last check-in — no pressure, just here when you're ready.",
-];
 
 export default function Home({ profile, onOpenPlan, onNavigateToCare }) {
   const { name, journeys = [], plan } = profile ?? {};
@@ -21,7 +16,7 @@ export default function Home({ profile, onOpenPlan, onNavigateToCare }) {
   const doneCount = currentPhase?.actions.filter((a) => a.done).length ?? 0;
   const totalCount = currentPhase?.actions.length ?? 0;
   const percent = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
-  const noticed = NOTICED_MESSAGES[new Date().getDay() % NOTICED_MESSAGES.length];
+  const noticed = noticedMessage(profile);
 
   return (
     <div className="home-screen">

@@ -24,3 +24,27 @@ export function lastNDays(n) {
   }
   return days;
 }
+
+// Consecutive days (counting back from today) with at least one habit
+// logged. Moved here from Track.jsx so Home's insight messages can use the
+// same streak number Track shows, instead of a second copy that could
+// silently disagree.
+export function currentStreak(habitLog) {
+  let streak = 0;
+  const cursor = new Date();
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const key = todayKey(cursor);
+    const dayLog = habitLog[key];
+    const anyDone = dayLog && Object.values(dayLog).some(Boolean);
+    if (!anyDone) break;
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+}
+
+// How many of the given days had a specific habit logged.
+export function countHabitDays(habitLog, habitId, days) {
+  return days.filter((d) => habitLog[todayKey(d)]?.[habitId]).length;
+}

@@ -8,18 +8,21 @@ import { summarizePlan, summarizeTracking } from "./profileContext.js";
 // already collected (name, age, chosen journeys, the "Anything we should
 // know?" tags) instead of re-asking for it.
 //
-// 2026-08-24 revision: an audit found the question list re-asked things the
-// person already told us in About You's tags (e.g. flagging "Irregular
-// periods" at sign-up, then being asked "are your periods regular?" a few
-// screens later). Fixed two ways: (1) explicit tag -> question skip rules
-// below, so a flagged symptom is used silently instead of asked about again
-// — no soft "I saw you mentioned X" acknowledgement either, just skip
-// straight past it, per the human's call; a report showing what onboarding
-// info fed into the plan is a good idea but explicitly deferred, not built
-// here. (2) the question list itself was trimmed from 14 to 11 by merging
-// three closely-related asks into one message each (symptom-priority into
-// the fatigue/cravings question; diet type+cuisine+avoidances into one
-// "what do you eat" question) — fewer turns for everyone, tagged or not.
+// 2026-08-24: an audit found the question list re-asked things the person
+// already told us in About You's tags (e.g. flagging "Irregular periods"
+// at sign-up, then being asked "are your periods regular?" a few screens
+// later). Fixed two ways: (1) explicit tag -> question skip rules below,
+// so a flagged symptom is used silently instead of asked about again — no
+// soft "I saw you mentioned X" acknowledgement either, just skip straight
+// past it, per the human's call; a report showing what onboarding info fed
+// into the plan is a good idea but explicitly deferred, not built here.
+// (2) the question list itself was trimmed from 14 to 11 by merging three
+// closely-related asks into one message each (symptom-priority into the
+// fatigue/cravings question; diet type+cuisine+avoidances into one "what
+// do you eat" question) — fewer turns for everyone, tagged or not. (A
+// same-day detour restored the full 14 for stricter reference fidelity,
+// then came back to this 11-question version per the human's explicit
+// call — this is the one that ships.)
 export function buildSystemPrompt(profile = {}) {
   const { name, age, journeys = [], tags = [], location } = profile;
   const known = [];
