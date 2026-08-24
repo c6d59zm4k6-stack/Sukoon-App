@@ -112,6 +112,8 @@
   gap: 6px;
 }
 .companion.is-compact .companion__tagline { font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); margin-top: 2px; }
+.companion__tagline-leaf { display: none; flex-shrink: 0; }
+.companion.is-compact .companion__tagline-leaf { display: inline-flex; }
 
 .companion__header-actions { position: relative; z-index: 2; display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: 2px; }
 .companion__icon-btn {
@@ -168,8 +170,11 @@
   flex-direction: column;
   gap: 12px;
 }
-.companion__hero { text-align: center; padding: 30px 28px 20px; }
+.companion__hero { text-align: center; padding: 10px 28px 20px; }
 .companion__hero p { font-size: 1.02rem; color: var(--ink); margin: 0; font-weight: 500; }
+.companion__hero-divider { display: flex; align-items: center; gap: 10px; margin: 16px auto 0; max-width: 180px; }
+.companion__hero-divider span { flex: 1; height: 1px; background: var(--border); }
+.companion__hero-divider svg { flex-shrink: 0; color: var(--indigo-mid); }
 
 .companion-bubble-row { display: flex; flex-direction: column; }
 .companion-bubble-row--user { align-items: flex-end; }
@@ -300,6 +305,22 @@
 .companion__send-btn:disabled { opacity: 0.5; cursor: default; }
 
 .companion__disclaimer { text-align: center; font-size: 0.72rem; color: var(--ink-soft); padding: 3px 16px 10px; flex-shrink: 0; }
+
+.companion__tagline-footer {
+  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #a85826;
+  text-transform: uppercase;
+  padding: 2px 16px 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.companion.is-compact .companion__tagline-footer { display: none; }
 
 .companion-modal-overlay { position: absolute; inset: 0; background: rgba(35, 32, 72, 0.45); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
 .companion-modal { background: #fff; border-radius: var(--radius); padding: 20px; max-width: 400px; width: 100%; max-height: 80vh; overflow-y: auto; }
