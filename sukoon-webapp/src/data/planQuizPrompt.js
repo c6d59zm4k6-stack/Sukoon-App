@@ -1,3 +1,5 @@
+import { summarizePlan, summarizeTracking } from "./profileContext.js";
+
 // System prompt for the AI-backed Plan Questionnaire, adapted from the
 // reference tool the human shared (pcos-root-plan.tiiny.site). Kept close
 // to the original question set and PLAN JSON contract on purpose — that
@@ -6,11 +8,22 @@
 // use what onboarding already collected (name, age, chosen journeys)
 // instead of re-asking for it.
 export function buildSystemPrompt(profile = {}) {
-  const { name, age, journeys = [] } = profile;
+  const { name, age, journeys = [], tags = [], location } = profile;
   const known = [];
   if (name) known.push(`Their name is ${name} — greet them by name, don't ask for it again.`);
   if (age) known.push(`Their age is ${age} — don't ask for it again.`);
   if (journeys.length) known.push(`They already told us they're here for: ${journeys.join(", ")}. Let that shape your questions (e.g. don't over-focus on fertility if they only chose Mental Well-being).`);
+  if (tags.length) known.push(`At sign-up they flagged: ${tags.join(", ")}.`);
+  if (location) known.push(`They're based in/near ${location}.`);
+
+  const existingPlanSummary = summarizePlan(profile.plan);
+  if (existingPlanSummary) {
+    known.push(`They already have a plan on file from a previous session: ${existingPlanSummary} If they're retaking this, treat it as a refinement/update, not a from-scratch restart — ask what's changed rather than re-covering ground the old plan already settled.`);
+  }
+  const trackingSummary = summarizeTracking(profile.tracking);
+  if (trackingSummary) {
+    known.push(`Their recent tracking activity: ${trackingSummary} You can reference this naturally (e.g. acknowledging consistency, or asking about a gap) but don't interrogate them about it.`);
+  }
 
   return `You are Sukoon's wellness guide, building a personalised starting plan. You are NOT a doctor — never diagnose or prescribe.
 

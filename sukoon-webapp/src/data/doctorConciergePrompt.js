@@ -4,6 +4,7 @@
 // Sukoon's actual roster (src/data/experts.js), with reasons, and can
 // refine the pick on request ("more affordable", "closer", etc.).
 import { EXPERTS, CLINIC } from "./experts.js";
+import { summarizePlan, summarizeTracking } from "./profileContext.js";
 
 function rosterLines() {
   return EXPERTS.map((e, i) => {
@@ -19,10 +20,16 @@ function rosterLines() {
 }
 
 export function buildConciergeSystemPrompt(profile = {}) {
-  const { name, journeys = [] } = profile;
+  const { name, journeys = [], tags = [] } = profile;
   const known = [];
   if (name) known.push(`Their name is ${name} — greet them by name, don't ask for it again.`);
   if (journeys.length) known.push(`They already told us they're here for: ${journeys.join(", ")}.`);
+  if (tags.length) known.push(`At sign-up they flagged: ${tags.join(", ")}.`);
+
+  const existingPlanSummary = summarizePlan(profile.plan);
+  if (existingPlanSummary) known.push(`Their existing plan: ${existingPlanSummary} Weigh this alongside what they tell you in this chat when picking a doctor (e.g. a plan already flagging an androgen driver leans toward the gynaecologist over a generic pick).`);
+  const trackingSummary = summarizeTracking(profile.tracking);
+  if (trackingSummary) known.push(`Their recent tracking activity: ${trackingSummary}`);
 
   return `You are Sukoon's care concierge — a warm, efficient assistant helping someone find the RIGHT real doctor from Sukoon's small roster below, considering their problem and practical constraints (location, timing, budget, preferences). You are NOT a doctor — never diagnose. Think "healthcare concierge", not "doctor directory".
 
