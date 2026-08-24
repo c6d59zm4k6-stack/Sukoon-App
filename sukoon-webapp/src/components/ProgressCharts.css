@@ -1,0 +1,52 @@
+.progress-heatmap-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progress-heatmap {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.progress-heatmap__cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  min-width: 0;
+}
+
+.progress-heatmap__cell--l0 { background: var(--border); }
+.progress-heatmap__cell--l1 { background: var(--lavender-soft); }
+.progress-heatmap__cell--l2 { background: var(--lavender); }
+.progress-heatmap__cell--l3 { background: var(--indigo-mid); }
+.progress-heatmap__cell--l4 { background: var(--indigo-mid-deep); }
+
+.progress-heatmap__legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  justify-content: flex-end;
+  font-size: 0.66rem;
+  color: var(--ink-soft);
+}
+.progress-heatmap__legend .progress-heatmap__cell {
+  width: 10px;
+  height: 10px;
+  aspect-ratio: unset;
+  flex-shrink: 0;
+}
+
+.progress-weight-trend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.progress-weight-trend__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
