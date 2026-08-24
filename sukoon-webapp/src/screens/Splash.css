@@ -3,6 +3,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   overflow: hidden;
   color: #fff;
 }
@@ -21,17 +22,10 @@
   z-index: 1;
 }
 
-/* Simplified 2026-08-24: fewer elements survive on this screen now (see
-   Splash.jsx), so instead of pinning content to the top and footer to the
-   bottom (leaving a dead gap between them), the whole group is pushed
-   toward the bottom of the photo as one unit -- margin-top: auto absorbs
-   all the leftover space above it, letting the sky/mountains breathe at
-   the top instead. */
 .splash__content {
   position: relative;
   z-index: 2;
-  margin-top: auto;
-  padding: 0 24px;
+  padding: calc(48px + env(safe-area-inset-top)) 24px 0;
   text-align: center;
 }
 
