@@ -72,9 +72,17 @@ export default function Splash({ onBegin, onCreateAccount, onLogin }) {
         <p className="splash__divider"><span>or continue with</span></p>
         <div className="splash__social">
           {SOCIAL_PROVIDERS.map(({ key, label, Icon }) => (
-            <button key={key} className="splash__social-btn" aria-label={`Continue with ${label}`}>
+            <button
+              key={key}
+              type="button"
+              className="splash__social-btn"
+              disabled
+              aria-disabled="true"
+              aria-label={`Continue with ${label} — coming soon`}
+            >
               <Icon className="splash__social-icon" />
               <span>{label}</span>
+              <span className="splash__social-soon">Soon</span>
             </button>
           ))}
         </div>

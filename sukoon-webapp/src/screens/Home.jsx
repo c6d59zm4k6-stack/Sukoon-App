@@ -2,16 +2,12 @@ import { Sparkles, ChevronRight, Bell } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
 import { journeyLabel, journeyEmoji } from "../data/journeys.js";
+import { consultationReminders } from "../data/reminders.js";
 import "./Home.css";
 
 const WEEK_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 const TODAY_INDEX = 2; // mock: mid-week
 const EVENT_DAYS = new Set([3, 5]); // mock: days with a reminder/appointment
-
-const CONSULTATIONS = [
-  { title: "Follicular scan", subtitle: "Day 10 • 11:30 AM", badge: "Tomorrow" },
-  { title: "Nutritionist check-in", subtitle: "Fri • 4:00 PM", badge: "This week" },
-];
 
 const NOTICED_MESSAGES = [
   "Sukoon noticed you've logged water 5 days running — small wins add up 💜",
@@ -69,8 +65,8 @@ export default function Home({ profile, onOpenPlan, onNavigateToCare }) {
         <section>
           <h2 className="section-title">Upcoming Medical Consultations</h2>
           <button className="card home-screen__consultations" onClick={onNavigateToCare}>
-            {CONSULTATIONS.map((c) => (
-              <div className="home-screen__consultation" key={c.title}>
+            {consultationReminders().map((c) => (
+              <div className="home-screen__consultation" key={c.id}>
                 <span className="home-screen__consultation-icon"><Bell size={16} /></span>
                 <div className="home-screen__consultation-text">
                   <strong>{c.title}</strong>
