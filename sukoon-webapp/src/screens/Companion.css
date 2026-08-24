@@ -1,12 +1,11 @@
 /* Ported from the original chat app's inline <style> block, namespaced
    under .companion-* so nothing collides with the rest of sukoon-webapp.
-   The one deliberate visual departure from the source: the header's large
-   photo background (.header-bg) is dropped in favor of a plain --mist
-   background, for consistency with how every other screen in this app
-   already handles its header (TopBar's own art), and to avoid embedding
-   another large binary asset. Everything else — mascot avatar, breathing/
-   blink animation, status dot, typing indicator, crisis card, bubbles,
-   chips, modals — is ported near-verbatim. */
+   The header photo backdrop reuses this app's own existing hero art
+   (/brand/sukoon-header-art.webp, the same asset TopBar uses on every
+   other screen) instead of re-embedding the old app's own photo, for
+   visual consistency. Everything else — mascot avatar, breathing/blink
+   animation, status dot, typing indicator, crisis card, bubbles, chips,
+   modals — is ported near-verbatim. */
 
 .companion {
   display: flex;
@@ -17,24 +16,41 @@
 
 .companion__header {
   position: relative;
+  overflow: hidden;
   background: var(--mist);
-  min-height: 130px;
-  padding: 19px 20px 22px;
+  min-height: 180px;
+  padding: calc(19px + env(safe-area-inset-top)) 20px 22px;
   display: flex;
   align-items: flex-start;
   gap: 16px;
   flex-shrink: 0;
-  transition: padding 0.25s ease;
-  border-bottom: 1px solid var(--border);
+  z-index: 5;
+  transition: padding 0.25s ease, min-height 0.25s ease;
+}
+.companion__header-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url("/brand/sukoon-header-art.webp") center 60% / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 88%, transparent 100%);
+}
+.companion__header-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.28) 40%, rgba(255, 255, 255, 0.1) 62%, rgba(255, 255, 255, 0) 82%);
 }
 .companion.is-compact .companion__header {
-  padding-top: 14px;
+  padding-top: calc(14px + env(safe-area-inset-top));
   padding-bottom: 16px;
+  min-height: 0;
   align-items: center;
 }
 
 .companion__avatar-wrap {
   position: relative;
+  z-index: 2;
   flex-shrink: 0;
 }
 .companion__avatar-ring {
@@ -74,13 +90,14 @@
   .companion__avatar-ring, .companion__avatar-ring .companion-mascot-eyes circle { animation: none; }
 }
 
-.companion__header-text { flex: 1; min-width: 0; padding-top: 4px; }
+.companion__header-text { position: relative; z-index: 2; flex: 1; min-width: 0; padding-top: 4px; }
 .companion__header-text h1 {
   font-family: "Baloo 2", sans-serif;
   font-weight: 700;
   font-size: clamp(1.35rem, 6.5vw, 2.05rem);
   margin: 0;
   color: var(--heading-green);
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.7), 0 2px 12px rgba(255, 255, 255, 0.5);
   transition: font-size 0.25s ease;
 }
 .companion.is-compact .companion__header-text h1 { font-size: 1.15rem; }
@@ -89,13 +106,14 @@
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--ink);
+  text-shadow: 0 1px 3px rgba(255, 255, 255, 0.7), 0 2px 10px rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
   gap: 6px;
 }
 .companion.is-compact .companion__tagline { font-size: 0.8rem; font-weight: 500; color: var(--ink-soft); margin-top: 2px; }
 
-.companion__header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: 2px; }
+.companion__header-actions { position: relative; z-index: 2; display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-top: 2px; }
 .companion__icon-btn {
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(67, 70, 122, 0.3);
