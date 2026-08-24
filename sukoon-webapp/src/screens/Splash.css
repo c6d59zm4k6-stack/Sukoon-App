@@ -97,6 +97,53 @@
   text-align: center;
 }
 
+/* Re-added 2026-08-24, now living in the footer directly above the CTA
+   (it used to sit under the tagline in .splash__content) -- same grid,
+   just a bottom margin instead of a top one since it's the footer's
+   first child now. */
+.splash__features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.splash__feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.splash__feature-icon {
+  width: 46px; height: 46px;
+  border-radius: 16px;
+  background: var(--mist);
+  color: var(--indigo-deep);
+  border: 1px solid rgba(201,184,232,0.5);
+  box-shadow: var(--card-shadow);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.splash__feature-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5em;
+  width: 100%;
+  padding: 4px 3px;
+  border-radius: 10px;
+  background: rgba(45,30,70,0.82);
+  backdrop-filter: blur(8px);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+  text-align: center;
+}
+
 .splash__cta {
   width: 100%;
   font-size: 1.05rem;
