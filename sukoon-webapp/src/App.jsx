@@ -39,19 +39,29 @@ export default function App() {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(async ({ data: { session: current } }) => {
-      if (!active) return;
-      setSession(current);
-      if (current) {
-        const { profile: p, tracking: t } = await fetchUserData(current.user.id);
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session: current } }) => {
         if (!active) return;
-        const loaded = { ...p, tracking: t };
-        setProfile(loaded);
-        setStage(resumeStageFor(loaded));
-      } else {
+        setSession(current);
+        if (current) {
+          const { profile: p, tracking: t } = await fetchUserData(current.user.id);
+          if (!active) return;
+          const loaded = { ...p, tracking: t };
+          setProfile(loaded);
+          setStage(resumeStageFor(loaded));
+        } else {
+          setStage("splash");
+        }
+      })
+      .catch((error) => {
+        // A session/profile fetch failure must never leave the app stuck on
+        // the loading spinner forever -- fall back to a logged-out state so
+        // the person can at least reach Splash and try again.
+        console.error("Session bootstrap failed:", error);
+        if (!active) return;
         setStage("splash");
-      }
-    });
+      });
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
@@ -144,10 +154,15 @@ export default function App() {
           onBack={() => setStage("splash")}
           onAuthed={async (newSession) => {
             setSession(newSession);
-            const { profile: p, tracking: t } = await fetchUserData(newSession.user.id);
-            const loaded = { ...p, tracking: t };
-            setProfile(loaded);
-            setStage(resumeStageFor(loaded));
+            try {
+              const { profile: p, tracking: t } = await fetchUserData(newSession.user.id);
+              const loaded = { ...p, tracking: t };
+              setProfile(loaded);
+              setStage(resumeStageFor(loaded));
+            } catch (error) {
+              console.error("Post-auth profile fetch failed:", error);
+              setStage(resumeStageFor(EMPTY_PROFILE));
+            }
           }}
         />
       </div>
