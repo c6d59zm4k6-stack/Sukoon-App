@@ -225,6 +225,8 @@ export default function Companion({ profile }) {
   return (
     <div className={"companion" + (compact ? " is-compact" : "")}>
       <header className="companion__header">
+        <div className="companion__header-bg" aria-hidden="true" />
+        <div className="companion__header-scrim" aria-hidden="true" />
         <div className="companion__avatar-wrap">
           <button type="button" className="companion__avatar-ring" onClick={handleMascotTap} aria-label="Sukoon mascot">
             <span dangerouslySetInnerHTML={{ __html: MASCOT_SVG }} />
