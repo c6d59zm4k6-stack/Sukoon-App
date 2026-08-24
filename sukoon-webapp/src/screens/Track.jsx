@@ -1,19 +1,14 @@
 import { useState } from "react";
 import { CalendarHeart, Scale } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
-import { HABITS, todayKey, lastNDays, currentStreak } from "../data/habits.js";
+import { HABITS, todayKey, lastNDays, currentStreak, habitCompletionPercent } from "../data/habits.js";
 import { currentCycleDay, nextPeriodDate } from "../data/cycle.js";
+import { HabitHeatmap, WeightTrend } from "../components/ProgressCharts.jsx";
 import "./Track.css";
 
 const MOODS = ["Low", "Okay", "Good"];
 const ENERGY_LEVELS = ["Low", "Okay", "High"];
 const SKIN_SYMPTOMS = ["Acne", "Hair thinning", "Bloating", "Fatigue"];
-
-function habitCompletionPercent(dayLog) {
-  if (!dayLog) return 0;
-  const done = HABITS.filter((h) => dayLog[h.id]).length;
-  return done / HABITS.length;
-}
 
 function totalCompletions(habitLog) {
   return Object.values(habitLog).reduce((sum, day) => sum + Object.values(day).filter(Boolean).length, 0);
@@ -32,6 +27,7 @@ export default function Track({ profile, onToggleHabit, onLogPeriod, onLogSympto
   const last14 = lastNDays(14);
 
   const weekDays = lastNDays(7);
+  const last30 = lastNDays(30);
   const streak = currentStreak(tracking.habitLog);
   const goalsCompleted = totalCompletions(tracking.habitLog);
 
@@ -166,6 +162,20 @@ export default function Track({ profile, onToggleHabit, onLogPeriod, onLogSympto
               <div><span>❤️ {streak}</span><small>Day streak</small></div>
               <div><span>🌿 {goalsCompleted}</span><small>Goals completed</small></div>
             </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="section-title">Your Progress</h2>
+          <div className="card track-screen__progress">
+            <span className="track-screen__progress-label">Habit consistency, last 30 days</span>
+            <HabitHeatmap habitLog={tracking.habitLog} days={last30} />
+            {tracking.weightLog.length >= 2 && (
+              <>
+                <span className="track-screen__progress-label track-screen__progress-label--spaced">Weight trend</span>
+                <WeightTrend weightLog={tracking.weightLog} />
+              </>
+            )}
           </div>
         </section>
 

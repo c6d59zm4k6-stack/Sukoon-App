@@ -12,6 +12,7 @@ import Experts from "./screens/Experts.jsx";
 import DoctorConcierge from "./screens/DoctorConcierge.jsx";
 import Profile from "./screens/Profile.jsx";
 import Companion from "./screens/Companion.jsx";
+import Library from "./screens/Library.jsx";
 import { buildPlan as buildFallbackPlan } from "./data/planTemplates.js";
 import { todayKey } from "./data/habits.js";
 import { supabase, supabaseConfigError } from "./lib/supabaseClient.js";
@@ -29,9 +30,20 @@ export default function App() {
   const [stage, setStage] = useState("loading");
   const [tab, setTab] = useState("home");
   const [careView, setCareView] = useState(null);
+  const [homeView, setHomeView] = useState(null);
   const [session, setSession] = useState(null);
   const [authMode, setAuthMode] = useState("signup");
   const [profile, setProfile] = useState(EMPTY_PROFILE);
+
+  // Journey-matched deep link -- e.g. an Instagram bio link tagged
+  // ?journey=pcos lands a new visitor pre-selected on that journey at
+  // Choose Journey instead of picking from scratch, so someone following
+  // us for PCOS content specifically sees PCOS content specifically, not
+  // a generic feed. Read once on mount; the query string is otherwise
+  // meaningless to the rest of the app.
+  const [deepLinkJourney] = useState(
+    () => new URLSearchParams(window.location.search).get("journey")
+  );
 
   const profileRef = useRef(profile);
   useEffect(() => { profileRef.current = profile; }, [profile]);
@@ -197,6 +209,7 @@ export default function App() {
     return (
       <div className="app-shell">
         <ChooseJourney
+          preselect={deepLinkJourney}
           onBack={() => setStage("about")}
           onContinue={(journeyIds) => {
             setProfile((p) => ({ ...p, journeys: journeyIds }));
@@ -234,7 +247,9 @@ export default function App() {
   const renderTab = () => {
     switch (tab) {
       case "home":
-        return <Home profile={profile} onOpenPlan={() => setTab("plan")} onNavigateToCare={() => setTab("care")} />;
+        return homeView === "library"
+          ? <Library profile={profile} onBack={() => setHomeView(null)} />
+          : <Home profile={profile} onOpenPlan={() => setTab("plan")} onNavigateToCare={() => setTab("care")} onOpenLibrary={() => setHomeView("library")} />;
       case "plan":
         return <Plan profile={profile} />;
       case "track":

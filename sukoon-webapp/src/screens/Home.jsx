@@ -1,22 +1,24 @@
-import { Sparkles, ChevronRight, Bell } from "lucide-react";
+import { Sparkles, ChevronRight, Bell, BookOpen } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
 import { journeyLabel, journeyEmoji } from "../data/journeys.js";
 import { consultationReminders } from "../data/reminders.js";
 import { noticedMessage } from "../data/insights.js";
+import { contentForJourneys } from "../data/library.js";
 import "./Home.css";
 
 const WEEK_DAYS = ["M", "T", "W", "T", "F", "S", "S"];
 const TODAY_INDEX = 2; // mock: mid-week
 const EVENT_DAYS = new Set([3, 5]); // mock: days with a reminder/appointment
 
-export default function Home({ profile, onOpenPlan, onNavigateToCare }) {
+export default function Home({ profile, onOpenPlan, onNavigateToCare, onOpenLibrary }) {
   const { name, journeys = [], plan } = profile ?? {};
   const currentPhase = plan?.phases?.find((p) => p.status === "current");
   const doneCount = currentPhase?.actions.filter((a) => a.done).length ?? 0;
   const totalCount = currentPhase?.actions.length ?? 0;
   const percent = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
   const noticed = noticedMessage(profile);
+  const libraryPreview = contentForJourneys(journeys, 2);
 
   return (
     <div className="home-screen">
@@ -77,6 +79,29 @@ export default function Home({ profile, onOpenPlan, onNavigateToCare }) {
           <span className="home-screen__noticed-icon"><Sparkles size={18} /></span>
           <p>{noticed}</p>
         </div>
+
+        {libraryPreview.length > 0 && (
+          <section>
+            <div className="section-title-row">
+              <h2 className="section-title">For You</h2>
+              <button type="button" className="link-btn" onClick={onOpenLibrary}>
+                See all <ChevronRight size={14} />
+              </button>
+            </div>
+            <div className="card home-screen__library">
+              {libraryPreview.map((item) => (
+                <button type="button" className="home-screen__library-item" key={item.id} onClick={onOpenLibrary}>
+                  <span className="home-screen__library-icon"><BookOpen size={16} /></span>
+                  <div className="home-screen__library-text">
+                    <span className="home-screen__library-category">{item.category}</span>
+                    <strong>{item.title}</strong>
+                  </div>
+                  <ChevronRight size={16} color="var(--ink-soft)" />
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

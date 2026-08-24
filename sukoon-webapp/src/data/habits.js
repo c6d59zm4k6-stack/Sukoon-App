@@ -48,3 +48,12 @@ export function currentStreak(habitLog) {
 export function countHabitDays(habitLog, habitId, days) {
   return days.filter((d) => habitLog[todayKey(d)]?.[habitId]).length;
 }
+
+// Fraction (0-1) of the 4 daily habits done on a given day's log. Shared by
+// Track's weekly bar chart and the 30-day consistency heatmap so both agree
+// on what "completion" means.
+export function habitCompletionPercent(dayLog) {
+  if (!dayLog) return 0;
+  const done = HABITS.filter((h) => dayLog[h.id]).length;
+  return done / HABITS.length;
+}

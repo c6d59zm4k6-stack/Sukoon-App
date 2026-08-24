@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Heart, Bell, ChevronDown, Download, MessageCircle, Mail } from "lucide-react";
+import { Heart, Bell, ChevronDown, Download, MessageCircle, Mail, UtensilsCrossed } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
 import { downloadPlanPdf } from "../utils/planPdf.js";
 import { buildReportSummaryText } from "../data/planReport.js";
 import { HABITS, todayKey } from "../data/habits.js";
 import { REMINDERS } from "../data/reminders.js";
+import { recipesForPlan, zomatoSearchUrl, swiggySearchUrl } from "../data/recipes.js";
 import "./Plan.css";
 
 const STATUS_LABEL = { current: "Current", upcoming: "Upcoming", done: "Done" };
@@ -16,6 +17,7 @@ export default function Plan({ profile }) {
   const typeProfile = profile?.plan?.typeProfile;
   const tests = profile?.plan?.tests ?? [];
   const hasFullReport = Boolean(profile?.plan?.raw);
+  const recipes = phases.length ? recipesForPlan(profile?.plan) : [];
   const todaysHabits = profile?.tracking?.habitLog?.[todayKey()] || {};
   const [expandedId, setExpandedId] = useState(
     () => phases.find((p) => p.status === "current")?.id
@@ -121,6 +123,32 @@ export default function Plan({ profile }) {
                   <span className={"plan-screen__badge plan-screen__badge--" + (t.tag || "base")}>
                     {TEST_TAG_LABEL[t.tag] || "Test"}
                   </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {recipes.length > 0 && (
+          <section>
+            <h2 className="section-title">Recipes for You</h2>
+            <div className="plan-screen__recipes">
+              {recipes.map((r) => (
+                <div className="card plan-screen__recipe" key={r.id}>
+                  <div className="plan-screen__recipe-icon"><UtensilsCrossed size={18} /></div>
+                  <div className="plan-screen__recipe-text">
+                    <strong>{r.name}</strong>
+                    <span>{r.summary}</span>
+                    <span className="plan-screen__recipe-why">{r.whyItHelps}</span>
+                  </div>
+                  <div className="plan-screen__recipe-actions">
+                    <a className="plan-screen__recipe-link" href={zomatoSearchUrl(r.dishQuery)} target="_blank" rel="noreferrer">
+                      Find on Zomato
+                    </a>
+                    <a className="plan-screen__recipe-link" href={swiggySearchUrl(r.dishQuery)} target="_blank" rel="noreferrer">
+                      Find on Swiggy
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>

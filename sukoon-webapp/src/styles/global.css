@@ -170,6 +170,34 @@ a { color: inherit; }
   background: var(--lavender-soft);
 }
 
+/* Moved here from Plan.css (2026-08-24) for the same reason as .field/.chip
+   above -- used by Home/Plan/Track/Experts but only ever defined in one of
+   those screens' stylesheets. */
+.section-title {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--heading-green);
+  margin: 0 0 10px;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.section-title-row .section-title { margin: 0; }
+
+.link-btn {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--indigo-mid);
+}
+
 .app-loading {
   flex: 1;
   display: flex;

@@ -7,8 +7,14 @@ import "./ChooseJourney.css";
 // (not hidden, so people can see what's coming) rather than removed.
 const ENABLED_JOURNEYS = new Set(["pcos"]);
 
-export default function ChooseJourney({ onBack, onContinue, onSkip }) {
-  const [selected, setSelected] = useState(new Set());
+export default function ChooseJourney({ onBack, onContinue, onSkip, preselect }) {
+  // Pre-selects (never locks) a journey passed in from a deep link (e.g.
+  // ?journey=pcos on an Instagram bio link) -- only if it's actually a
+  // live journey, so a link to a not-yet-enabled one doesn't pre-check a
+  // disabled card.
+  const [selected, setSelected] = useState(() =>
+    preselect && ENABLED_JOURNEYS.has(preselect) ? new Set([preselect]) : new Set()
+  );
 
   const toggle = (id) => {
     if (!ENABLED_JOURNEYS.has(id)) return;
