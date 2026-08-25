@@ -1,0 +1,10 @@
+.instagram-embeds {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.instagram-embeds .instagram-media {
+  margin: 0 !important;
+  width: 100% !important;
+}
