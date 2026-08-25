@@ -461,6 +461,244 @@ stray test files ever landed in a commit.
 zero remaining references first). `VITE_CHAT_APP_URL` is consequently unused
 — see env var list above.
 
+## Content work stream, 2026-08-25
+
+Session goal: the second of the two work streams named on 2026-08-24
+(backend/database, done that session; content, open until now). Human
+brainstormed a content library, Instagram-journey-matched content,
+before/after progress visualizations, recipe/restaurant suggestions, and a
+language-learning retention hook — then gave an explicit triage instruction:
+build what has clear value + is feasible now; substitute a simpler
+visualization where the value is clear but the full version is hard; drop
+the rest for now but remember it.
+
+**Triage result (the "drop for now" list is a deliberate memory, not an
+oversight — don't build any of it without being asked again):**
+- Build now: content library, Instagram journey-matched deep link, recipe
+  suggestions + restaurant links, a daily nudge (reused existing
+  streak/insight logic rather than a new feature).
+- Simple-visualization substitute: a 30-day habit-consistency heatmap +
+  weight-trend sparkline, instead of photo-based before/after overlays.
+- Dropped for now, kept in memory: muscle-activation exercise/yoga
+  visualizations (no yoga content exists yet to visualize), a real
+  Zomato/Swiggy *ordering* API integration (needs an actual business
+  partnership, not just a link), a standalone language-learning curriculum
+  (judged a poor fit — the retention goal is better served by the existing
+  streak/insight mechanism already in the app).
+
+### Content library
+
+New `src/data/library.js` (`CONTENT_ITEMS`, `contentForJourneys()`,
+`contentById()`) + new `src/screens/Library.jsx/.css` (expand/collapse list,
+`TopBar title="For You"`). Wired into `Home.jsx` as a "For You" preview
+section (2 items + "See all"), not a 7th bottom-nav tab — human's explicit
+placement choice (`homeView` state in `App.jsx`, same pattern the old
+Home→Experts nesting used before Care was promoted to its own tab).
+`.section-title`/`.section-title-row`/`.link-btn` moved from `Plan.css` to
+`global.css` since Home now needs them too (same fix pattern as
+`.field`/`.chip` earlier).
+
+### Instagram journey-matched deep link
+
+`?journey=pcos`-style link → `App.jsx`'s `deepLinkJourney` (lazy `useState`
+reading `URLSearchParams`) → `ChooseJourney`'s new `preselect` prop (for a
+brand-new visitor) and a `stage === "app"` effect that jumps straight to
+`Library` with `homeView="library"` (for anyone already logged in, who
+skips onboarding entirely). `Library.jsx` gained a `highlightJourney` prop
++ a banner ("Showing what's relevant to X, since that's what brought you
+here").
+
+Two real bugs found via live testing, in order:
+1. **Logged-in users saw nothing.** The original implementation only wired
+   into `ChooseJourney`'s onboarding path — anyone with an existing session
+   skips onboarding, so the deep link did nothing for exactly the case
+   being tested. Fixed by adding the `stage === "app"` effect above.
+2. **Query string vanishes during login, not yet fully root-caused.** Live
+   test on `https://sukoon-app-eta.vercel.app/?journey=pcos` as a
+   not-yet-logged-in visitor: after logging in, landed on Home with the
+   address bar's `?journey=pcos` gone. Mitigation shipped: `deepLinkJourney`
+   now also persists to/reads from `sessionStorage` the instant it's seen in
+   the URL, covering a same-tab reload/redirect during login dropping the
+   query string. **This is a mitigation for one plausible cause, not a
+   confirmed root cause** — if the string is stripped before the SPA's very
+   first paint (e.g. at a hosting/redirect layer), this wouldn't catch that.
+   Not re-reported as broken since shipping the fix, but also not
+   independently re-confirmed fixed on the exact original repro — worth
+   re-testing with a real fresh (never-logged-in-here) visitor if this area
+   gets touched again.
+
+**Instagram channel-choice question resolved without any new code**: human
+asked whether a customer could pick which Instagram channel's content shows
+up. Answer: no public API exists to verify "does user X follow account Y,"
+and the human's own follow-up confirmed no customer choice is wanted anyway
+— the business already fully controls this via which `?journey=` link it
+publishes where. Nothing to build.
+
+### Recipes + "too busy to cook" ordering guidance
+
+`src/data/recipes.js`: `DRIVER_ORDERING_TIPS` (real, driver-matched "what to
+order" tips, keyed by `profile.plan.typeProfile.mainDriver`) +
+`GENERAL_ORDERING_TIPS` fallback, `RECIPES` (8 recipes, 2 per driver, each
+with real ingredients/steps), `recipesForPlan()`/`orderingTipsForPlan()`.
+`Plan.jsx` renders each recipe with a "View recipe" toggle (ingredients +
+steps inline) plus one shared "Too busy to cook?" card with the ordering
+tips and plain `ZOMATO_URL`/`SWIGGY_URL` links.
+
+**This went through a real reframing, not just polish.** First version
+linked each recipe to a Zomato/Swiggy dish-name *search* URL
+(`zomato.com/search?q=<dish>`). Human live-tested it: "it opens the app, but
+then it is redirected to zomato's website... a general one" — confirmed both
+apps intercept that link and land on their own generic homepage, not search
+results. Root cause is the installed apps' own URL-interception behavior,
+unreachable/unfixable from here. Rather than patch the broken link, asked
+the human what the actual goal was — answer: "give options to eat the food
+as per their plan even if they are busy... point is not generic link." Fully
+replaced the feature around that: real ordering tips (what to actually pick
+off any menu) + honest plain homepage links (labeled for what they actually
+do) + the in-app "View Recipe" option as the dependable path regardless of
+what the external apps do. `dishQuery` fields and the search-URL builders
+were deleted entirely, not left as dead code.
+
+### Simple progress visualization
+
+`src/components/ProgressCharts.jsx/.css` (new): `HabitHeatmap` (30-day,
+5-level single-hue sequential heatmap using the app's own
+`--border`→`--lavender-soft`→`--lavender`→`--indigo-mid`→
+`--indigo-mid-deep` ramp, native `title` tooltips, a "Less…More" legend) and
+`WeightTrend` (inline SVG line+area sparkline, only rendered with 2+ logged
+weights). Wired into `Track.jsx`'s new "Your Progress" section. The
+`dataviz` skill was read before writing any chart code per its own trigger
+instructions; the single-hue ramp was chosen deliberately as a sequential
+magnitude encoding, not a categorical-identity one, so the skill's
+fixed-hue-order categorical check wasn't the relevant validator here.
+
+`src/data/habits.js` gained shared exports (`currentStreak`,
+`countHabitDays`, `habitCompletionPercent` — moved out of `Track.jsx`'s
+local copies) and `src/data/cycle.js` gained `daysUntilNextPeriod()`, both
+now reused by the existing `insights.js`'s `noticedMessage(profile)` (Home's
+"Sukoon noticed" card, itself built earlier to replace a canned 3-message
+rotation with something derived from real tracking/plan state).
+
+### Instagram post embedding — real content, not just a link (2026-08-25, ongoing same day)
+
+After the deep link shipped, human tested it and asked a bigger question:
+the Library was showing **our own written articles**, journey-filtered, but
+the actual original ask was showing **real Instagram posts**, journey-filtered
+— a genuine scope gap between what got built and what was meant. Confirmed
+via `AskUserQuestion`: the answer was "actual Instagram posts, filtered,"
+not written content, and specifically **only manually-listed, hand-tagged
+posts** (Instagram has no keyword-search or full-account-feed API without a
+business integration) — see Graph API note below.
+
+**Built:** `src/data/instagramPosts.js` (`INSTAGRAM_POSTS`, manually
+curated, each with `journeyIds` + a real post `permalink`;
+`instagramPostsForJourneys()`) + `src/components/InstagramEmbeds.jsx/.css`
+(new), using Instagram's own public `embed.js` (`<blockquote
+class="instagram-media" data-instgrm-permalink="...">`, same mechanism as
+Instagram's own "Embed" button — no API key for a public post). Wired into
+`Library.jsx` as a "From Instagram" section, filtered the same way as the
+written content.
+
+**Sourcing the demo content**: this sandbox cannot reach `instagram.com` or
+arbitrary external sites directly (`WebFetch` confirmed blocked at the
+network-egress-proxy level for both `instagram.com` and the business's own
+website) — only `WebSearch` works, going through a different channel. Real
+post permalinks for `@woodhousehealthcare` (three reels) came from the
+human directly, after a search for the account by name alone returned
+several similarly-named-but-different businesses — a real risk to watch
+for: never guess/fabricate a specific post URL or assume a same-named
+account is the right one.
+
+**Multiple iterations trying to get the reels to actually render — this is
+worth reading in full if this area gets touched again, because most of it
+was mis-diagnosis, not fixes:**
+
+1. Reels rendered as **completely blank space** in the Library. Assumed
+   (unverified) an ad blocker or a mobile browser's tracking protection was
+   silently dropping the `embed.js` request. Added a "View this post on
+   Instagram" plain-link fallback, shown if a real embed doesn't appear
+   within a timeout — a reasonable defensive addition regardless of the
+   real cause, and it's still in place today as the actual shipped feature
+   (see conclusion below).
+2. Human re-tested: the fallback wasn't showing either — instead, **three
+   barely-visible thin lines**. Diagnosed (correctly, in isolation) that
+   embed.js *was* swapping the blockquote for an iframe, so the naive "did
+   an iframe appear" check reported false success while the iframe itself
+   had collapsed to near-zero height. Added a height check.
+3. Assumed (unverified) Reels specifically need more time to load video
+   content than a photo post before their iframe grows to real height.
+   Replaced a single fixed-delay check with an 8-second poll. Didn't help.
+4. Went back to the human's pushback ("are you sure what you are doing is
+   correct... this should be fairly straightforward") and actually re-read
+   the component's own CSS instead of guessing at more external causes —
+   found a **real, confirmed bug**: `.instagram-embeds .instagram-media {
+   width: 100% !important }` was scoped to the class generically, but
+   embed.js's replacement `<iframe>` keeps the same `instagram-media` class
+   the original `<blockquote>` had — so the rule was forcibly overriding the
+   *iframe's own* inline width after Instagram had already calculated it,
+   breaking its height math (more visible on video than a static photo).
+   Fixed by scoping the CSS to `blockquote.instagram-media` only. This was a
+   real bug and a real fix — but still didn't solve the actual problem.
+5. **Actual root cause**, found only by asking the human to open their
+   browser's console (should have been step one): Instagram's own server
+   sends `X-Frame-Options: DENY` on the embed response for this
+   request/origin — a hard, server-side instruction that blocks framing
+   entirely, from any site, no exceptions. No client-side code (CSS, JS,
+   timing, polling) can work around an `X-Frame-Options` header; it isn't a
+   bug in this codebase at all.
+
+**A process mistake worth flagging explicitly so it isn't repeated**: earlier
+in this chain, opening the raw `{permalink}embed/` URL directly in a normal
+browser tab was proposed as a test to isolate "is this Instagram's fault or
+our code's fault." That test is invalid for this exact failure mode —
+`X-Frame-Options` only restricts *framing*, not a direct top-level page
+load, so the direct-open test will always "look fine" even when iframing is
+completely blocked. It gave a false signal that pointed the diagnosis at
+"our code" for one more full iteration round. **The actual right first move
+when an iframe embed silently fails: check the browser console for
+`X-Frame-Options`/CSP errors before touching any CSS or JS.**
+
+**Where this landed:**
+- The "View this post on Instagram" tap-through link (built in step 1 above)
+  is not a stopgap — it's the correct, real, final behavior for the
+  free/keyless embed method, given Instagram's own header blocks the
+  alternative outright.
+- Real inline Reels (or any Instagram content) would need the **Instagram
+  Graph API** — the business account the human already has is the
+  prerequisite, but a full connection still needs registering a Meta
+  developer app, linking it to a Facebook Page, and Meta's app review
+  (days to weeks). That path fetches the actual media file/URL and plays it
+  in a normal `<video>`/`<img>` tag rather than iframing instagram.com at
+  all, which is exactly why it sidesteps `X-Frame-Options`. Verified this
+  is a real, proven pattern (not just architectural reasoning) via
+  `WebSearch`: Smash Balloon's Instagram Feed plugin does exactly this at
+  scale (1.75M+ sites), using the official API to self-host and display
+  Reels/videos rather than framing instagram.com.
+- **Not started, not decided**: whether to actually pursue the Graph API
+  integration. Human's call — flagged as a real, separate project (ongoing
+  token/permission management, not a one-time build), not a quick follow-up
+  to what exists today.
+- **Also still open**: the three demo `INSTAGRAM_POSTS` entries are all
+  tagged `journeyIds: []` (general/everyone) — human said "let's do all the
+  tagging later." Revisit once there's a real set of posts to tag by
+  journey.
+
+### Git workflow gotcha found this session
+
+Reusing the same feature branch across several squash-merged PRs in a row
+(required by this repo's own workflow — see the 2026-08-24 note below about
+merged PRs not reopening) makes GitHub report **"Pull Request has merge
+conflicts"** on the next PR even when there is no real, content-level
+conflict — an artifact of the squash-merge history diverging from the
+branch's own commit graph, not an actual conflicting change (confirmed each
+time via `git diff origin/main -- <file>` showing a clean, isolated diff).
+Happened repeatedly this session (PRs #18, #19, #21 all hit it). **Fix each
+time**: `git fetch origin main`, `git stash` any uncommitted work, `git
+reset --hard origin/main`, `git stash pop`, recommit, `git push
+--force-with-lease`. Worth remembering for any future session continuing
+work on this same reused branch, rather than re-diagnosing it as a real
+conflict again.
+
 ## Suggested next steps, in order
 
 1. ~~Rebuild the **Start/splash screen**~~ — **parked at ~80% by human's own
@@ -485,13 +723,21 @@ zero remaining references first). `VITE_CHAT_APP_URL` is consequently unused
    single most important thing to verify next given it's a
    safety-critical feature — see the Companion section above for full
    context.
-6. **Content work stream is still fully open** (2026-08-24) — the session's
-   two declared work streams were backend/database (this session's focus)
-   and content; content hasn't been started. Includes: canned Home-screen
-   copy ("Sukoon noticed" messages, still first-draft), the full Plan
-   Questionnaire port to match the real reference tool's 14 questions (see
-   "Porting the real Plan Questionnaire" section — still a scaffold), and
-   custom illustrated icons replacing emoji placeholders.
+6. ~~Content work stream~~ — **the content library, Instagram deep link,
+   recipes/ordering guidance, and simple progress visualization are all
+   built as of 2026-08-25** — see "Content work stream, 2026-08-25" above
+   for full detail, including the Instagram Reels embedding saga and its
+   real conclusion (tap-through link is correct/final for the free method;
+   real inline Reels need a Graph API integration, not started). Still open
+   from the original content list: canned Home-screen copy ("Sukoon
+   noticed" is now derived from real tracking/plan state rather than a
+   fixed rotation, but its exact wording is still a first draft), the full
+   Plan Questionnaire port to match the real reference tool's 14 questions
+   (see "Porting the real Plan Questionnaire" section — still a scaffold),
+   custom illustrated icons replacing emoji placeholders, and the explicitly
+   dropped-for-now items (muscle-activation visuals, a real Zomato/Swiggy
+   ordering API partnership, a standalone language-learning curriculum) —
+   don't start any of those without being asked again.
 7. **Decommission the old root chat-app Vercel project** — open decision
    for the human, not done. Nothing in `sukoon-webapp` links to it anymore
    as of 2026-08-24 (see "Why two Vercel projects" above), but it's still
@@ -568,6 +814,21 @@ zero remaining references first). `VITE_CHAT_APP_URL` is consequently unused
   shared import (same pattern as `planQuizPrompt.js`/`doctorConciergePrompt.js`
   already established). If the source prompt is ever tuned further, remember
   to port the change into `companionPrompt.js` too, and vice versa.
+- **Instagram Reels can't be embedded inline via the free method** (2026-08-25)
+  — confirmed root cause is Instagram's own `X-Frame-Options: DENY` header on
+  the embed response, not fixable client-side. The "View this post on
+  Instagram" tap-through link is the real, correct behavior today. Real
+  inline Reels would need a Graph API integration (business account already
+  available; app registration + Meta review + ongoing token handling still
+  needed) — human's call whether to pursue this, not started. See "Content
+  work stream, 2026-08-25" above for the full diagnostic history.
+- **Instagram demo posts not yet tagged by journey** (2026-08-25) — the three
+  `INSTAGRAM_POSTS` entries are all `journeyIds: []` (general). Human said to
+  do the tagging later; revisit once there's a real set to tag.
+- **Dropped-for-now content ideas, kept in memory only** (2026-08-25, human's
+  own explicit triage) — muscle-activation exercise/yoga visualizations, a
+  real Zomato/Swiggy ordering API partnership, a standalone language-learning
+  curriculum. Do not start any of these without being asked again.
 - **State-of-the-world reminders for whoever picks this up** (2026-08-24):
   the `sukoon-webapp` Vercel project now needs 4 env vars, not 2 —
   `GROQ_API_KEY`, `OPENROUTER_API_KEY`, `VITE_SUPABASE_URL`,
