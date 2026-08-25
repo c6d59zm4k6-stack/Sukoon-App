@@ -434,9 +434,41 @@
   white-space: nowrap;
 }
 
-.plan-screen__recipe-caveat {
+.plan-screen__ordering {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+  background: var(--lavender-soft);
+  border-color: transparent;
+}
+
+.plan-screen__ordering-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.plan-screen__ordering-head strong {
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+.plan-screen__ordering-sub {
   margin: 0;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   color: var(--ink-soft);
+  line-height: 1.4;
+}
+
+.plan-screen__ordering-tips {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.plan-screen__ordering-tips li {
+  font-size: 0.82rem;
+  color: var(--ink);
   line-height: 1.4;
 }

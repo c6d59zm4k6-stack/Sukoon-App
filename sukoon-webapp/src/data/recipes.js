@@ -3,23 +3,56 @@
 // JSON contract actually returns; there's no separate "diet type" field to
 // match against, see planQuizPrompt.js's contract).
 //
-// Restaurant links are a plain keyword search on Zomato/Swiggy's own site
-// (zomato.com/search?q=<dish>), same "deep link out, not a real
-// integration" pattern as experts.js's clinicMapsUrl — NOT a guaranteed
-// match to this exact home-cooked recipe. It's a generic text search, so
-// results depend entirely on what's actually listed near whoever taps it;
-// it can just as easily surface something unrelated as something close.
-// Real "order this exact dish" ordering would need an actual Zomato/Swiggy
-// API partnership, out of reach for this pass. Because of that gap, every
-// recipe also carries its own ingredients/steps so there's always a real,
-// dependable in-app option regardless of what the restaurant search turns
-// up (see ingredients/steps below, rendered by Plan.jsx's expand toggle).
+// 2026-08-25: the first version of this file linked out to a Zomato/Swiggy
+// dish-name search (zomato.com/search?q=<dish>). Live testing found both
+// apps intercept that link and land on their own generic homepage instead
+// of search results — not useful, and not the actual goal anyway. The
+// human's own words: "I was thinking to give options to eat the food as
+// per their plan even if they are busy. That's the goal. Point is not
+// generic link." So this now leads with real ordering-in/eating-out
+// guidance (DRIVER_ORDERING_TIPS below) — what to actually pick from any
+// menu to stay plan-appropriate on a busy day — with a plain, honest link
+// to open the app to browse (ZOMATO/SWIGGY *do* reliably open from these,
+// per the human's own test; they just don't deep-link to a specific
+// search). Real "order this exact dish" ordering would still need an
+// actual Zomato/Swiggy API partnership, out of reach for this pass.
+export const DRIVER_ORDERING_TIPS = {
+  "Insulin-driven": [
+    "Pick grilled, steamed, or tandoori over anything fried or in a creamy gravy.",
+    "Add a side salad, raita, or dal instead of extra rice or naan.",
+    "Order last, not while browsing hungry — you're less likely to over-order sides.",
+  ],
+  "Gut-inflammation-driven": [
+    "Ask for less oil and spice if bloating tends to flare up.",
+    "Pick curd-based sides (raita, chaas) over anything cream- or butter-heavy.",
+    "Skip deep-fried starters — they're the most common trigger for gut symptoms.",
+  ],
+  "Androgen-driven": [
+    "Go for lean proteins — grilled fish, tandoori paneer or chicken — over fried snacks.",
+    "Unsweetened lassi or nimbu pani instead of a sugary drink alongside the meal.",
+  ],
+  "Stress-driven": [
+    "A simple warm meal (dal-rice, khichdi) sits easier before bed than something heavy.",
+    "Order earlier in the evening rather than late at night if sleep is the focus.",
+  ],
+};
+const GENERAL_ORDERING_TIPS = [
+  "Pick grilled, steamed, or tandoori over fried where you can.",
+  "A curd- or dal-based side is an easy, gentle add to almost any order.",
+];
+
+export function orderingTipsForPlan(plan) {
+  const driver = plan?.typeProfile?.mainDriver;
+  return DRIVER_ORDERING_TIPS[driver] || GENERAL_ORDERING_TIPS;
+}
+
+export const ZOMATO_URL = "https://www.zomato.com";
+export const SWIGGY_URL = "https://www.swiggy.com";
 export const RECIPES = [
   {
     id: "moong-dal-chilla",
     drivers: ["Insulin-driven"],
     name: "Moong Dal Chilla with Curd",
-    dishQuery: "moong dal chilla",
     summary: "A savoury lentil crepe — protein-forward, not just carbs, so it doesn't spike blood sugar the way a plain paratha would.",
     whyItHelps: "Pairing the carb (batter) with protein (dal + curd) is exactly the 'pair, don't skip' principle behind your plan's insulin-focused tips.",
     ingredients: [
@@ -43,7 +76,6 @@ export const RECIPES = [
     id: "grilled-fish-greens",
     drivers: ["Insulin-driven"],
     name: "Grilled Fish with Sautéed Greens",
-    dishQuery: "grilled fish tikka",
     summary: "Lean protein and fibre, minimal refined carbs.",
     whyItHelps: "A lower-carb dinner keeps insulin demand down through the evening — useful if cravings tend to hit at night.",
     ingredients: [
@@ -66,7 +98,6 @@ export const RECIPES = [
     id: "curd-rice-flaxseed",
     drivers: ["Gut-inflammation-driven"],
     name: "Curd Rice with a Spoon of Flaxseed",
-    dishQuery: "curd rice",
     summary: "A classic South Indian comfort dish, with flaxseed stirred in for extra fibre.",
     whyItHelps: "Curd's probiotics and flaxseed's fibre both support gut health — directly relevant if bloating or IBS-type symptoms are part of your picture.",
     ingredients: [
@@ -87,7 +118,6 @@ export const RECIPES = [
     id: "buttermilk-cucumber-salad",
     drivers: ["Gut-inflammation-driven"],
     name: "Buttermilk (Chaas) & Cucumber Salad",
-    dishQuery: "masala chaas",
     summary: "Cooling, probiotic-rich, and easy on digestion.",
     whyItHelps: "A good pairing after a heavier meal — buttermilk's probiotics support the same gut-health goal as your plan's daily curd habit.",
     ingredients: [
@@ -108,7 +138,6 @@ export const RECIPES = [
     id: "paneer-spinach-sabzi",
     drivers: ["Androgen-driven"],
     name: "Paneer & Spinach (Palak Paneer)",
-    dishQuery: "palak paneer",
     summary: "Iron-rich greens with protein.",
     whyItHelps: "Leafy greens like spinach are a source of magnesium, which plays a role in insulin sensitivity — relevant alongside the androgen overlay in your plan.",
     ingredients: [
@@ -131,7 +160,6 @@ export const RECIPES = [
     id: "spearmint-tea-flax-toast",
     drivers: ["Androgen-driven"],
     name: "Spearmint Tea with Flaxseed Toast",
-    dishQuery: "spearmint tea",
     summary: "A light snack pairing, not a meal on its own.",
     whyItHelps: "Spearmint tea and flaxseed are both specifically called out in your plan's notes for an androgen overlay — this is a simple way to actually work them in daily.",
     ingredients: [
@@ -151,7 +179,6 @@ export const RECIPES = [
     id: "turmeric-milk",
     drivers: ["Stress-driven"],
     name: "Warm Turmeric Milk (Haldi Doodh)",
-    dishQuery: "haldi doodh",
     summary: "A calming, screen-free wind-down ritual before bed.",
     whyItHelps: "Poor sleep raises cortisol and next-day cravings — a simple evening ritual like this supports the sleep-focused part of a stress-driven plan.",
     ingredients: [
@@ -170,7 +197,6 @@ export const RECIPES = [
     id: "overnight-oats-walnuts",
     drivers: ["Stress-driven"],
     name: "Overnight Oats with Walnuts",
-    dishQuery: "overnight oats",
     summary: "A steady-release breakfast with omega-3s from walnuts.",
     whyItHelps: "Omega-3s are linked to lower inflammation, and a steady-release breakfast avoids the energy dips that make stress harder to manage.",
     ingredients: [
@@ -198,14 +224,4 @@ export function recipesForPlan(plan) {
   if (!driver) return RECIPES.filter((r) => GENERAL_RECIPES.includes(r.id));
   const matches = RECIPES.filter((r) => r.drivers.includes(driver));
   return matches.length ? matches : RECIPES.filter((r) => GENERAL_RECIPES.includes(r.id));
-}
-
-// Plain keyword search on each site's own search page — see the file-level
-// comment above for exactly what this does and doesn't guarantee.
-export function zomatoSearchUrl(dishQuery) {
-  return `https://www.zomato.com/search?q=${encodeURIComponent(dishQuery)}`;
-}
-
-export function swiggySearchUrl(dishQuery) {
-  return `https://www.swiggy.com/search?query=${encodeURIComponent(dishQuery)}`;
 }
