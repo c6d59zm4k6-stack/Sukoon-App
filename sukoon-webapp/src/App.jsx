@@ -72,6 +72,15 @@ export default function App() {
     }
   }, [stage, deepLinkJourney, deepLinkHandled]);
 
+  // TEMPORARY diagnostic (2026-08-25) -- remove once the About-You/Home
+  // inconsistency is confirmed fixed. Shows, on-screen, exactly what each
+  // code path saw: which of the three callers ran (cold-boot session
+  // restore, post-login, or a manual retry), whether the fetch errored,
+  // and what the fetched profile's name/journeys/plan actually were. This
+  // replaces guessing with a fact the person can screenshot directly from
+  // their phone, since checking devtools on-device isn't convenient there.
+  const [debugInfo, setDebugInfo] = useState(null);
+
   // Shared by the initial session bootstrap, post-login, and the
   // account-error screen's retry button -- one place that decides where an
   // authenticated person lands. `fetchUserData` already retries once
@@ -81,13 +90,23 @@ export default function App() {
   // of Home, since a transient fetch failure looked identical to a
   // brand-new profile. A real fetch failure now shows a retriable error
   // screen instead of silently guessing.
-  const loadProfileAndResume = async (userId) => {
+  const loadProfileAndResume = async (userId, source) => {
     const { profile: p, tracking: t, hasError } = await fetchUserData(userId);
     if (hasError) {
+      setDebugInfo({ source, userId: userId?.slice(0, 8), hasError: true });
       setStage("account-error");
       return;
     }
     const loaded = { ...p, tracking: t };
+    setDebugInfo({
+      source,
+      userId: userId?.slice(0, 8),
+      hasError: false,
+      name: p.name ? JSON.stringify(p.name) : "(empty)",
+      journeys: p.journeys?.length ?? 0,
+      phases: p.plan?.phases?.length ?? 0,
+      resolvedStage: resumeStageFor(loaded),
+    });
     setProfile(loaded);
     setStage(resumeStageFor(loaded));
   };
@@ -120,7 +139,7 @@ export default function App() {
         if (!active) return;
         setSession(current);
         if (current) {
-          await loadProfileAndResume(current.user.id);
+          await loadProfileAndResume(current.user.id, "cold-boot");
         } else {
           setStage("splash");
         }
@@ -245,7 +264,7 @@ export default function App() {
           onBack={() => setStage("splash")}
           onAuthed={async (newSession) => {
             setSession(newSession);
-            await loadProfileAndResume(newSession.user.id);
+            await loadProfileAndResume(newSession.user.id, "post-login");
           }}
         />
       </div>
@@ -255,10 +274,11 @@ export default function App() {
   if (stage === "account-error") {
     return (
       <div className="app-shell">
+        {debugBanner}
         <div className="app-account-error" role="alert">
           <strong>Couldn't load your account</strong>
           <p>This is usually a brief connection hiccup, not a problem with your account or data.</p>
-          <button type="button" onClick={() => loadProfileAndResume(session.user.id)}>Try again</button>
+          <button type="button" onClick={() => loadProfileAndResume(session.user.id, "retry")}>Try again</button>
         </div>
       </div>
     );
@@ -268,9 +288,22 @@ export default function App() {
     <div className="app-save-error" role="alert">Couldn't save — check your connection and tap Continue again.</div>
   );
 
+  // TEMPORARY -- see debugInfo comment above. Deliberately ugly/inline so
+  // it's obvious this is scaffolding to strip out, not a real UI element.
+  const debugBanner = debugInfo && (
+    <div style={{
+      position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
+      background: "#000", color: "#0f0", fontSize: "10px", fontFamily: "monospace",
+      padding: "4px 8px", wordBreak: "break-all",
+    }}>
+      DEBUG {JSON.stringify(debugInfo)}
+    </div>
+  );
+
   if (stage === "about") {
     return (
       <div className="app-shell">
+        {debugBanner}
         {saveErrorBanner}
         <AboutYou
           onBack={() => setStage("splash")}
@@ -286,6 +319,7 @@ export default function App() {
   if (stage === "journey") {
     return (
       <div className="app-shell">
+        {debugBanner}
         {saveErrorBanner}
         <ChooseJourney
           preselect={deepLinkJourney}
@@ -308,6 +342,7 @@ export default function App() {
   if (stage === "plan-quiz") {
     return (
       <div className="app-shell">
+        {debugBanner}
         {saveErrorBanner}
         <PlanQuestionnaire
           profile={profile}
@@ -355,6 +390,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
+      {debugBanner}
       <div className="app-shell__body">{renderTab()}</div>
       <BottomNav active={tab} onChange={setTab} />
     </div>
