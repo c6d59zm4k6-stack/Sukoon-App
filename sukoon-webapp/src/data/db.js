@@ -42,17 +42,34 @@ function rowToTracking(row) {
   };
 }
 
-// A fetch failure must never hard-crash the app -- log and fall back
-// to empty defaults, same as a brand new signup would see.
-export async function fetchUserData(userId) {
+async function fetchUserRows(userId) {
   const [{ data: profileRow, error: profileError }, { data: trackingRow, error: trackingError }] =
     await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).single(),
       supabase.from("tracking").select("*").eq("user_id", userId).single(),
     ]);
-  if (profileError) console.error("fetchUserData: profile fetch failed", profileError);
-  if (trackingError) console.error("fetchUserData: tracking fetch failed", trackingError);
-  return { profile: rowToProfile(profileRow), tracking: rowToTracking(trackingRow) };
+  return { profileRow, trackingRow, hasError: Boolean(profileError || trackingError) };
+}
+
+// The signup trigger guarantees a profiles/tracking row exists for every
+// authenticated user, so a failed fetch here is always a transient problem
+// (network blip, momentary auth hiccup) -- never a legitimate "this is a
+// brand-new user" state. Retries once after a short pause before giving up,
+// and surfaces `hasError` so callers can show a real retry state instead of
+// silently falling back to an empty profile, which used to send an
+// existing, already-onboarded user back through onboarding on a bad fetch.
+export async function fetchUserData(userId) {
+  let result = await fetchUserRows(userId);
+  if (result.hasError) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    result = await fetchUserRows(userId);
+  }
+  if (result.hasError) console.error("fetchUserData: failed after retry for user", userId);
+  return {
+    profile: rowToProfile(result.profileRow),
+    tracking: rowToTracking(result.trackingRow),
+    hasError: result.hasError,
+  };
 }
 
 const PROFILE_FIELD_TO_COLUMN = {

@@ -26,7 +26,7 @@ function resumeStageFor(profile) {
   return "app";
 }
 
-// stage: "loading" | "splash" | "auth" | "about" | "journey" | "plan-quiz" | "app"
+// stage: "loading" | "splash" | "auth" | "account-error" | "about" | "journey" | "plan-quiz" | "app"
 export default function App() {
   const [stage, setStage] = useState("loading");
   const [tab, setTab] = useState("home");
@@ -72,6 +72,26 @@ export default function App() {
     }
   }, [stage, deepLinkJourney, deepLinkHandled]);
 
+  // Shared by the initial session bootstrap, post-login, and the
+  // account-error screen's retry button -- one place that decides where an
+  // authenticated person lands. `fetchUserData` already retries once
+  // internally; if it still fails here, this deliberately does NOT fall
+  // back to resumeStageFor(EMPTY_PROFILE) -- that used to be exactly what
+  // made an existing user intermittently land back on "About You" instead
+  // of Home, since a transient fetch failure looked identical to a
+  // brand-new profile. A real fetch failure now shows a retriable error
+  // screen instead of silently guessing.
+  const loadProfileAndResume = async (userId) => {
+    const { profile: p, tracking: t, hasError } = await fetchUserData(userId);
+    if (hasError) {
+      setStage("account-error");
+      return;
+    }
+    const loaded = { ...p, tracking: t };
+    setProfile(loaded);
+    setStage(resumeStageFor(loaded));
+  };
+
   useEffect(() => {
     if (supabaseConfigError) return; // nothing to bootstrap -- render() shows the error instead
     let active = true;
@@ -82,11 +102,7 @@ export default function App() {
         if (!active) return;
         setSession(current);
         if (current) {
-          const { profile: p, tracking: t } = await fetchUserData(current.user.id);
-          if (!active) return;
-          const loaded = { ...p, tracking: t };
-          setProfile(loaded);
-          setStage(resumeStageFor(loaded));
+          await loadProfileAndResume(current.user.id);
         } else {
           setStage("splash");
         }
@@ -211,17 +227,21 @@ export default function App() {
           onBack={() => setStage("splash")}
           onAuthed={async (newSession) => {
             setSession(newSession);
-            try {
-              const { profile: p, tracking: t } = await fetchUserData(newSession.user.id);
-              const loaded = { ...p, tracking: t };
-              setProfile(loaded);
-              setStage(resumeStageFor(loaded));
-            } catch (error) {
-              console.error("Post-auth profile fetch failed:", error);
-              setStage(resumeStageFor(EMPTY_PROFILE));
-            }
+            await loadProfileAndResume(newSession.user.id);
           }}
         />
+      </div>
+    );
+  }
+
+  if (stage === "account-error") {
+    return (
+      <div className="app-shell">
+        <div className="app-account-error" role="alert">
+          <strong>Couldn't load your account</strong>
+          <p>This is usually a brief connection hiccup, not a problem with your account or data.</p>
+          <button type="button" onClick={() => loadProfileAndResume(session.user.id)}>Try again</button>
+        </div>
       </div>
     );
   }
