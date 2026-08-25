@@ -4,7 +4,12 @@
   gap: 12px;
 }
 
-.instagram-embeds .instagram-media {
+/* Scoped to the placeholder <blockquote> only, not `.instagram-media` in
+   general -- embed.js replaces the blockquote with an <iframe> that keeps
+   the same class, and forcing that iframe's width after the fact breaks
+   Instagram's own size calculation (most visible on video/Reels, whose
+   height math is more sensitive to width than a static photo's). */
+.instagram-embeds blockquote.instagram-media {
   margin: 0 !important;
   width: 100% !important;
 }
