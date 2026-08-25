@@ -10,11 +10,21 @@
 // be public (not a private account) for the embed to render for visitors
 // who aren't logged into Instagram.
 export const INSTAGRAM_POSTS = [
-  // {
-  //   id: "example-post",
-  //   journeyIds: ["pcos"],
-  //   permalink: "https://www.instagram.com/p/REPLACE_WITH_REAL_SHORTCODE/",
-  // },
+  {
+    id: "woodhousehealthcare-demo-1",
+    journeyIds: [],
+    permalink: "https://www.instagram.com/woodhousehealthcare/reel/Czk2GtMvugA/",
+  },
+  {
+    id: "woodhousehealthcare-demo-2",
+    journeyIds: [],
+    permalink: "https://www.instagram.com/woodhousehealthcare/reel/DZ9xhEGhOrb/",
+  },
+  {
+    id: "woodhousehealthcare-demo-3",
+    journeyIds: [],
+    permalink: "https://www.instagram.com/woodhousehealthcare/reel/DaNcoymTWMx/",
+  },
 ];
 
 export function instagramPostsForJourneys(journeyIds, limit) {
