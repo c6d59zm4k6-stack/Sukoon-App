@@ -4,6 +4,7 @@ import TopBar from "../components/TopBar.jsx";
 import { HABITS, todayKey, lastNDays, currentStreak, habitCompletionPercent } from "../data/habits.js";
 import { currentCycleDay, nextPeriodDate } from "../data/cycle.js";
 import { HabitHeatmap, WeightTrend } from "../components/ProgressCharts.jsx";
+import { CHECKIN_SCALE, isStruggleValue, suggestionForCheckin } from "../data/checkins.js";
 import "./Track.css";
 
 const MOODS = ["Low", "Okay", "Good"];
@@ -14,10 +15,11 @@ function totalCompletions(habitLog) {
   return Object.values(habitLog).reduce((sum, day) => sum + Object.values(day).filter(Boolean).length, 0);
 }
 
-export default function Track({ profile, onToggleHabit, onLogPeriod, onLogSymptom, onLogWeight }) {
-  const tracking = profile?.tracking ?? { habitLog: {}, periods: [], symptomLog: {}, weightLog: [] };
+export default function Track({ profile, onToggleHabit, onLogPeriod, onLogSymptom, onLogWeight, onLogCheckin }) {
+  const tracking = profile?.tracking ?? { habitLog: {}, periods: [], symptomLog: {}, weightLog: [], checkinLog: {} };
   const key = todayKey();
   const todaysHabits = tracking.habitLog[key] || {};
+  const todaysCheckin = tracking.checkinLog?.[key]?.value ?? null;
   const todaysSymptoms = tracking.symptomLog[key] || { mood: null, energy: null, skin: [] };
   const [weightInput, setWeightInput] = useState("");
 
@@ -45,6 +47,30 @@ export default function Track({ profile, onToggleHabit, onLogPeriod, onLogSympto
       <TopBar title="Track" tagline="A few taps a day is enough." />
 
       <div className="track-screen__content">
+        <section>
+          <h2 className="section-title">How did today go?</h2>
+          <div className="card track-screen__checkin">
+            <span className="track-screen__checkin-label">Sticking to your plan today</span>
+            <div className="track-screen__checkin-row">
+              {CHECKIN_SCALE.map(({ value, emoji, label }) => (
+                <button
+                  type="button"
+                  key={value}
+                  className={"track-screen__checkin-btn" + (todaysCheckin === value ? " is-selected" : "")}
+                  onClick={() => onLogCheckin(value)}
+                  aria-label={label}
+                  title={label}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+            {isStruggleValue(todaysCheckin) && (
+              <p className="track-screen__checkin-suggestion">{suggestionForCheckin(profile)}</p>
+            )}
+          </div>
+        </section>
+
         <section>
           <h2 className="section-title">Today's Habits</h2>
           <div className="track-screen__habit-grid">
