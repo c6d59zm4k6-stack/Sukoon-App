@@ -82,6 +82,17 @@ const PROFILE_FIELD_TO_COLUMN = {
   expertNotificationsEnabled: "expert_notifications_enabled",
 };
 
+// Returns whether the write actually succeeded. This used to be
+// fire-and-forget (errors only logged) -- but the onboarding screens use
+// this to save the very fields resumeStageFor() checks (name, journeys,
+// plan), so a silently-swallowed failure here meant the app would advance
+// past onboarding locally while the database never actually got the
+// update. The person's own browser session looked fine (Home showed up
+// correctly from in-memory state), but any later fresh load re-fetched a
+// profile that was still genuinely incomplete in the database, sending
+// them right back through onboarding -- and no amount of refreshing could
+// fix that, since the data really wasn't there. Retries once before
+// giving up, same pattern as fetchUserData.
 export async function saveProfileFields(userId, fields) {
   const update = {};
   for (const [key, value] of Object.entries(fields)) {
@@ -93,9 +104,18 @@ export async function saveProfileFields(userId, fields) {
       update[PROFILE_FIELD_TO_COLUMN[key]] = value;
     }
   }
-  if (!Object.keys(update).length) return;
-  const { error } = await supabase.from("profiles").update(update).eq("id", userId);
-  if (error) console.error("saveProfileFields failed", error);
+  if (!Object.keys(update).length) return true;
+
+  let { error } = await supabase.from("profiles").update(update).eq("id", userId);
+  if (error) {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    ({ error } = await supabase.from("profiles").update(update).eq("id", userId));
+  }
+  if (error) {
+    console.error("saveProfileFields failed after retry", error);
+    return false;
+  }
+  return true;
 }
 
 export async function saveTracking(userId, tracking) {

@@ -92,6 +92,24 @@ export default function App() {
     setStage(resumeStageFor(loaded));
   };
 
+  const [saveError, setSaveError] = useState(false);
+
+  // Onboarding's own "Continue" handlers used to fire-and-forget this save
+  // and advance the stage regardless -- if the write silently failed, the
+  // browser's local state looked fine (Home showed up correctly from
+  // memory) while the database never actually got name/journeys/plan,
+  // exactly the fields resumeStageFor() checks. Any later fresh load then
+  // correctly (from the database's real, still-incomplete state) sent that
+  // person right back through onboarding, and no refresh could fix it since
+  // the data genuinely wasn't saved. Now the stage only advances once the
+  // save is confirmed to have actually succeeded.
+  const persistProfileFields = async (fields) => {
+    if (!session?.user?.id) return true;
+    const ok = await saveProfileFields(session.user.id, fields);
+    setSaveError(!ok);
+    return ok;
+  };
+
   useEffect(() => {
     if (supabaseConfigError) return; // nothing to bootstrap -- render() shows the error instead
     let active = true;
@@ -246,15 +264,19 @@ export default function App() {
     );
   }
 
+  const saveErrorBanner = saveError && (
+    <div className="app-save-error" role="alert">Couldn't save — check your connection and tap Continue again.</div>
+  );
+
   if (stage === "about") {
     return (
       <div className="app-shell">
+        {saveErrorBanner}
         <AboutYou
           onBack={() => setStage("splash")}
-          onContinue={(aboutData) => {
+          onContinue={async (aboutData) => {
             setProfile((p) => ({ ...p, ...aboutData }));
-            if (session?.user?.id) saveProfileFields(session.user.id, aboutData);
-            setStage("journey");
+            if (await persistProfileFields(aboutData)) setStage("journey");
           }}
         />
       </div>
@@ -264,20 +286,19 @@ export default function App() {
   if (stage === "journey") {
     return (
       <div className="app-shell">
+        {saveErrorBanner}
         <ChooseJourney
           preselect={deepLinkJourney}
           onBack={() => setStage("about")}
-          onContinue={(journeyIds) => {
+          onContinue={async (journeyIds) => {
             setProfile((p) => ({ ...p, journeys: journeyIds }));
-            if (session?.user?.id) saveProfileFields(session.user.id, { journeys: journeyIds });
-            setStage("plan-quiz");
+            if (await persistProfileFields({ journeys: journeyIds })) setStage("plan-quiz");
           }}
-          onSkip={() => {
+          onSkip={async () => {
             const journeys = profileRef.current.journeys.length ? profileRef.current.journeys : ["pcos"];
             const plan = buildFallbackPlan(journeys, {});
             setProfile((p) => ({ ...p, journeys, plan }));
-            if (session?.user?.id) saveProfileFields(session.user.id, { journeys, plan });
-            setStage("app");
+            if (await persistProfileFields({ journeys, plan })) setStage("app");
           }}
         />
       </div>
@@ -287,13 +308,13 @@ export default function App() {
   if (stage === "plan-quiz") {
     return (
       <div className="app-shell">
+        {saveErrorBanner}
         <PlanQuestionnaire
           profile={profile}
           onBack={() => setStage("journey")}
-          onContinue={({ answers, plan }) => {
+          onContinue={async ({ answers, plan }) => {
             setProfile((p) => ({ ...p, quizAnswers: answers, plan }));
-            if (session?.user?.id) saveProfileFields(session.user.id, { quizAnswers: answers, plan });
-            setStage("app");
+            if (await persistProfileFields({ quizAnswers: answers, plan })) setStage("app");
           }}
         />
       </div>
