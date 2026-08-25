@@ -8,6 +8,51 @@
   gap: 18px;
 }
 
+.track-screen__checkin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.track-screen__checkin-label {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+
+.track-screen__checkin-row {
+  display: flex;
+  gap: 8px;
+}
+
+.track-screen__checkin-btn {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-size: 1.3rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.track-screen__checkin-btn.is-selected {
+  border-color: var(--indigo-mid);
+  background: var(--lavender-soft);
+  transform: scale(1.08);
+}
+
+.track-screen__checkin-suggestion {
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--lavender-soft);
+  font-size: 0.82rem;
+  color: var(--ink);
+  line-height: 1.4;
+  text-align: left;
+}
+
 .track-screen__habit-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

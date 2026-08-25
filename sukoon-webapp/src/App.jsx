@@ -17,6 +17,7 @@ import { buildPlan as buildFallbackPlan } from "./data/planTemplates.js";
 import { todayKey } from "./data/habits.js";
 import { supabase, supabaseConfigError } from "./lib/supabaseClient.js";
 import { EMPTY_PROFILE, fetchUserData, saveProfileFields, saveTracking } from "./data/db.js";
+import { hasStrugglePattern } from "./data/checkins.js";
 
 function resumeStageFor(profile) {
   if (!profile.name) return "about";
@@ -162,6 +163,18 @@ export default function App() {
     });
   };
 
+  const logCheckin = (value) => {
+    const key = todayKey();
+    const nextCheckinLog = { ...profileRef.current.tracking.checkinLog, [key]: { value } };
+    persistTracking({
+      ...profileRef.current.tracking,
+      checkinLog: nextCheckinLog,
+      flaggedForExpertAt: hasStrugglePattern(nextCheckinLog)
+        ? profileRef.current.tracking.flaggedForExpertAt || new Date().toISOString()
+        : null,
+    });
+  };
+
   if (supabaseConfigError) {
     return (
       <div className="app-shell">
@@ -283,6 +296,7 @@ export default function App() {
             onLogPeriod={logPeriodToday}
             onLogSymptom={logSymptom}
             onLogWeight={logWeight}
+            onLogCheckin={logCheckin}
           />
         );
       case "care":

@@ -1,6 +1,11 @@
 -- Sukoon: Supabase schema for persistence (profiles + tracking).
 -- Run ONCE in the Supabase Dashboard -> SQL Editor for this project.
 -- Not idempotent -- re-running requires dropping these objects first.
+--
+-- If these tables already exist in your project (they do, as of
+-- 2026-08-25), this file is the target *shape*, not something to re-run --
+-- apply migrations/002_checkins.sql instead to bring an existing database
+-- up to date with the check-in columns added below.
 
 -- profiles: one row per authenticated user, mirrors src/App.jsx's
 -- profile state (minus the "tracking" branch, below).
@@ -14,6 +19,11 @@ create table public.profiles (
   journeys text[] not null default '{}',
   quiz_answers jsonb not null default '{}'::jsonb,
   plan jsonb not null default '{"phases": [], "answers": {}}'::jsonb,
+  -- Whether this person's plan tier includes expert monitoring of their
+  -- daily check-ins. No real subscription/billing exists yet -- this is a
+  -- plain flag, set manually for now, so the check-in flagging logic below
+  -- has something real to gate on once a subscription flow is built.
+  expert_notifications_enabled boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -25,6 +35,17 @@ create table public.tracking (
   periods jsonb not null default '[]'::jsonb,
   symptom_log jsonb not null default '{}'::jsonb,
   weight_log jsonb not null default '[]'::jsonb,
+  -- One-tap daily plan-adherence check-in (see src/data/checkins.js),
+  -- keyed by date: { "2026-08-25": { "value": 2 } }. Deliberately separate
+  -- from habit_log/symptom_log -- this is the single low-friction gesture,
+  -- everything else stays optional detail.
+  checkin_log jsonb not null default '{}'::jsonb,
+  -- Set (client-side, see hasStrugglePattern in checkins.js) when a
+  -- struggling pattern is detected in the trailing week, cleared once it
+  -- resolves. Data-model-only for now -- nothing consumes this yet, but it
+  -- makes "notify the expert" queryable once an expert-facing surface
+  -- exists, without needing a schema change then.
+  flagged_for_expert_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

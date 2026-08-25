@@ -5,10 +5,14 @@
 import { supabase } from "../lib/supabaseClient.js";
 
 export const EMPTY_PLAN = { phases: [], answers: {} };
-export const EMPTY_TRACKING = { habitLog: {}, periods: [], symptomLog: {}, weightLog: [] };
+export const EMPTY_TRACKING = {
+  habitLog: {}, periods: [], symptomLog: {}, weightLog: [],
+  checkinLog: {}, flaggedForExpertAt: null,
+};
 export const EMPTY_PROFILE = {
   name: "", gender: "", age: "", tags: [], location: "",
   journeys: [], quizAnswers: {}, plan: EMPTY_PLAN, tracking: EMPTY_TRACKING,
+  expertNotificationsEnabled: false,
 };
 
 function rowToProfile(row) {
@@ -22,6 +26,7 @@ function rowToProfile(row) {
     journeys: row.journeys ?? [],
     quizAnswers: row.quiz_answers ?? {},
     plan: row.plan ?? EMPTY_PLAN,
+    expertNotificationsEnabled: row.expert_notifications_enabled ?? false,
   };
 }
 
@@ -32,6 +37,8 @@ function rowToTracking(row) {
     periods: row.periods ?? [],
     symptomLog: row.symptom_log ?? {},
     weightLog: row.weight_log ?? [],
+    checkinLog: row.checkin_log ?? {},
+    flaggedForExpertAt: row.flagged_for_expert_at ?? null,
   };
 }
 
@@ -55,6 +62,7 @@ const PROFILE_FIELD_TO_COLUMN = {
   tags: "tags",
   journeys: "journeys",
   plan: "plan",
+  expertNotificationsEnabled: "expert_notifications_enabled",
 };
 
 export async function saveProfileFields(userId, fields) {
@@ -81,6 +89,8 @@ export async function saveTracking(userId, tracking) {
       periods: tracking.periods,
       symptom_log: tracking.symptomLog,
       weight_log: tracking.weightLog,
+      checkin_log: tracking.checkinLog,
+      flagged_for_expert_at: tracking.flaggedForExpertAt,
     })
     .eq("user_id", userId);
   if (error) console.error("saveTracking failed", error);
