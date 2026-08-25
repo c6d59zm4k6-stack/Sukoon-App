@@ -37,15 +37,27 @@ export default function App() {
 
   // Journey-matched deep link -- e.g. an Instagram bio link tagged
   // ?journey=pcos. Two effects, not one: (1) pre-selects (never locks) that
-  // journey on Choose Journey for a brand-new visitor, and (2) -- the part
-  // that was missing at first -- for anyone who lands with an existing
-  // session (skips onboarding entirely), jumps straight to the Library
-  // filtered to that journey the moment the app resolves, so the deep link
-  // is actually visible instead of silently doing nothing for a logged-in
-  // visitor. Read once on mount; the query string is otherwise meaningless.
-  const [deepLinkJourney] = useState(
-    () => new URLSearchParams(window.location.search).get("journey")
-  );
+  // journey on Choose Journey for a brand-new visitor, and (2) for anyone
+  // who lands with an existing session (skips onboarding entirely), jumps
+  // straight to the Library filtered to that journey the moment the app
+  // resolves.
+  //
+  // 2026-08-25: live testing found the query string can go missing by the
+  // time login finishes (confirmed: present in the link, gone from the
+  // address bar right after signing in) -- something in the login detour
+  // (a redirect, or the browser itself) drops it before this component
+  // ever gets to react to "app" stage. Persisting the value to
+  // sessionStorage the instant it's seen means a later reload/redirect in
+  // the same browser tab still finds it, even if the URL itself no longer
+  // carries it by then.
+  const [deepLinkJourney] = useState(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("journey");
+    if (fromUrl) {
+      try { sessionStorage.setItem("sukoon_deeplink_journey", fromUrl); } catch { /* private mode etc -- fine, just no persistence */ }
+      return fromUrl;
+    }
+    try { return sessionStorage.getItem("sukoon_deeplink_journey"); } catch { return null; }
+  });
   const [deepLinkHandled, setDeepLinkHandled] = useState(false);
 
   const profileRef = useRef(profile);
