@@ -3,8 +3,9 @@ import { Instagram, ExternalLink } from "lucide-react";
 import "./InstagramEmbeds.css";
 
 const EMBED_SCRIPT_SRC = "https://www.instagram.com/embed.js";
-const FALLBACK_TIMEOUT_MS = 5000;
-const IFRAME_SETTLE_MS = 1500;
+const NO_IFRAME_TIMEOUT_MS = 5000; // give up if embed.js never even swaps in an iframe
+const IFRAME_GROW_TIMEOUT_MS = 8000; // give a Reel's video longer to load than a photo post
+const POLL_INTERVAL_MS = 400;
 const MIN_RENDERED_HEIGHT = 100;
 
 // Instagram's own embed.js (no API key needed for a public post) turns any
@@ -51,42 +52,57 @@ function InstagramPost({ post }) {
 
   useEffect(() => {
     let settled = false;
-    let settleTimer;
+    let pollTimer;
+    let growTimeout;
     const container = containerRef.current;
+    const startedAt = Date.now();
 
-    const checkIframeHeight = () => {
+    const giveUp = () => {
+      if (settled) return;
+      settled = true;
+      clearInterval(pollTimer);
+      clearTimeout(growTimeout);
       const iframe = container?.querySelector("iframe");
-      if (iframe && iframe.getBoundingClientRect().height >= MIN_RENDERED_HEIGHT) {
+      if (iframe) iframe.style.display = "none";
+      setShowFallback(true);
+    };
+
+    // A Reel's video needs to load before its iframe grows to a real
+    // height, unlike a photo post's iframe which sizes itself almost
+    // immediately -- so once an iframe shows up at all, poll its height
+    // for a while rather than judging it after one fixed delay.
+    const pollHeight = () => {
+      const iframe = container?.querySelector("iframe");
+      if (!iframe) return;
+      if (iframe.getBoundingClientRect().height >= MIN_RENDERED_HEIGHT) {
         settled = true;
+        clearInterval(pollTimer);
+        clearTimeout(growTimeout);
         setShowFallback(false);
-      } else {
-        settled = true;
-        if (iframe) iframe.style.display = "none";
-        setShowFallback(true);
+        return;
       }
+      if (Date.now() - startedAt >= IFRAME_GROW_TIMEOUT_MS) giveUp();
     };
 
     const observer = new MutationObserver(() => {
-      if (container?.querySelector("iframe")) {
-        clearTimeout(settleTimer);
-        settleTimer = setTimeout(checkIframeHeight, IFRAME_SETTLE_MS);
+      if (container?.querySelector("iframe") && !pollTimer) {
+        pollTimer = setInterval(pollHeight, POLL_INTERVAL_MS);
+        growTimeout = setTimeout(giveUp, IFRAME_GROW_TIMEOUT_MS);
       }
     });
     if (container) observer.observe(container, { childList: true });
 
-    const fallbackTimer = setTimeout(() => {
-      if (!settled) setShowFallback(true);
-    }, FALLBACK_TIMEOUT_MS);
+    const noIframeTimer = setTimeout(() => {
+      if (!container?.querySelector("iframe")) giveUp();
+    }, NO_IFRAME_TIMEOUT_MS);
 
-    loadEmbedScript(
-      () => window.instgrm?.Embeds.process(),
-      () => { settled = true; setShowFallback(true); }
-    );
+    loadEmbedScript(() => window.instgrm?.Embeds.process(), giveUp);
 
     return () => {
       observer.disconnect();
-      clearTimeout(settleTimer);
-      clearTimeout(fallbackTimer);
+      clearInterval(pollTimer);
+      clearTimeout(growTimeout);
+      clearTimeout(noIframeTimer);
     };
   }, [post.permalink]);
 
