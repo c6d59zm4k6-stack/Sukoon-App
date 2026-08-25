@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Heart, Bell, ChevronDown, Download, MessageCircle, Mail, UtensilsCrossed, ExternalLink } from "lucide-react";
+import { Heart, Bell, ChevronDown, Download, MessageCircle, Mail, UtensilsCrossed, ExternalLink, Clock3 } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
 import { downloadPlanPdf } from "../utils/planPdf.js";
 import { buildReportSummaryText } from "../data/planReport.js";
 import { HABITS, todayKey } from "../data/habits.js";
 import { REMINDERS } from "../data/reminders.js";
-import { recipesForPlan, zomatoSearchUrl, swiggySearchUrl } from "../data/recipes.js";
+import { recipesForPlan, orderingTipsForPlan, ZOMATO_URL, SWIGGY_URL } from "../data/recipes.js";
 import "./Plan.css";
 
 const STATUS_LABEL = { current: "Current", upcoming: "Upcoming", done: "Done" };
@@ -18,6 +18,7 @@ export default function Plan({ profile }) {
   const tests = profile?.plan?.tests ?? [];
   const hasFullReport = Boolean(profile?.plan?.raw);
   const recipes = phases.length ? recipesForPlan(profile?.plan) : [];
+  const orderingTips = phases.length ? orderingTipsForPlan(profile?.plan) : [];
   const todaysHabits = profile?.tracking?.habitLog?.[todayKey()] || {};
   const [expandedId, setExpandedId] = useState(
     () => phases.find((p) => p.status === "current")?.id
@@ -173,20 +174,28 @@ export default function Plan({ profile }) {
                       </div>
                     )}
 
-                    <div className="plan-screen__recipe-actions">
-                      <a className="plan-screen__recipe-link" href={zomatoSearchUrl(r.dishQuery)} target="_blank" rel="noreferrer">
-                        <ExternalLink size={12} /> Search on Zomato
-                      </a>
-                      <a className="plan-screen__recipe-link" href={swiggySearchUrl(r.dishQuery)} target="_blank" rel="noreferrer">
-                        <ExternalLink size={12} /> Search on Swiggy
-                      </a>
-                    </div>
-                    <p className="plan-screen__recipe-caveat">
-                      Opens a search for "{r.dishQuery}" near you — not a guaranteed exact match, just a quick way to see what's around if you'd rather order than cook.
-                    </p>
                   </div>
                 );
               })}
+            </div>
+
+            <div className="card plan-screen__ordering">
+              <div className="plan-screen__ordering-head">
+                <span className="plan-screen__recipe-icon"><Clock3 size={18} /></span>
+                <strong>Too busy to cook?</strong>
+              </div>
+              <p className="plan-screen__ordering-sub">If you're ordering in or eating out today, here's what to actually look for on the menu:</p>
+              <ul className="plan-screen__ordering-tips">
+                {orderingTips.map((tip) => <li key={tip}>{tip}</li>)}
+              </ul>
+              <div className="plan-screen__recipe-actions">
+                <a className="plan-screen__recipe-link" href={ZOMATO_URL} target="_blank" rel="noreferrer">
+                  <ExternalLink size={12} /> Open Zomato
+                </a>
+                <a className="plan-screen__recipe-link" href={SWIGGY_URL} target="_blank" rel="noreferrer">
+                  <ExternalLink size={12} /> Open Swiggy
+                </a>
+              </div>
             </div>
           </section>
         )}
