@@ -34,15 +34,22 @@ export default function AboutYou({ onBack, onContinue }) {
         className="about-you__body"
         onSubmit={(e) => {
           e.preventDefault();
-          onContinue({ name, gender, age, tags: [...tags], location });
+          const trimmedName = name.trim();
+          if (!trimmedName) return; // belt-and-braces alongside the input's own `required`
+          onContinue({ name: trimmedName, gender, age, tags: [...tags], location });
         }}
       >
         <div className="about-you__card">
           <label className="field">
             <span className="field__label">What should we call you?</span>
+            {/* required: App.jsx's resumeStageFor() uses an empty name as
+                the signal "still needs About You" -- an unvalidated blank
+                submit here let someone sail through the rest of onboarding
+                with no name saved, ending up sent back to this exact screen
+                on every future load with no way to tell why. */}
             <span className="field__input">
               <User size={18} />
-              <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} />
+              <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
             </span>
           </label>
 
