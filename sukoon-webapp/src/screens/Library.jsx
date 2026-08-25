@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { ChevronDown, Clock, Sparkles } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
+import InstagramEmbeds from "../components/InstagramEmbeds.jsx";
 import { contentForJourneys } from "../data/library.js";
+import { instagramPostsForJourneys } from "../data/instagramPosts.js";
 import { journeyById } from "../data/journeys.js";
 import "./Library.css";
 
@@ -14,6 +16,7 @@ export default function Library({ profile, onBack, highlightJourney }) {
     ? [...new Set([...(profile?.journeys ?? []), highlightJourney])]
     : profile?.journeys ?? [];
   const items = contentForJourneys(journeyIds);
+  const instagramPosts = instagramPostsForJourneys(journeyIds);
   const [expandedId, setExpandedId] = useState(null);
   const highlightLabel = highlightJourney ? journeyById(highlightJourney)?.title : null;
 
@@ -27,6 +30,13 @@ export default function Library({ profile, onBack, highlightJourney }) {
             <span className="library-screen__highlight-icon"><Sparkles size={16} /></span>
             <span>Showing what's relevant to <strong>{highlightLabel}</strong>, since that's what brought you here.</span>
           </div>
+        )}
+
+        {instagramPosts.length > 0 && (
+          <section>
+            <h2 className="section-title">From Instagram</h2>
+            <InstagramEmbeds posts={instagramPosts} />
+          </section>
         )}
 
         {items.map((item) => {
