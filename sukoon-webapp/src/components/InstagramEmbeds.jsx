@@ -4,6 +4,8 @@ import "./InstagramEmbeds.css";
 
 const EMBED_SCRIPT_SRC = "https://www.instagram.com/embed.js";
 const FALLBACK_TIMEOUT_MS = 5000;
+const IFRAME_SETTLE_MS = 1500;
+const MIN_RENDERED_HEIGHT = 100;
 
 // Instagram's own embed.js (no API key needed for a public post) turns any
 // <blockquote class="instagram-media" data-instgrm-permalink="..."> into
@@ -12,14 +14,18 @@ const FALLBACK_TIMEOUT_MS = 5000;
 // time a new blockquote appears we have to explicitly ask it to re-scan
 // via window.instgrm.Embeds.process().
 //
-// 2026-08-25: live testing found the section can render completely blank
-// with no error -- likely a browser tracking-protection setting or ad
-// blocker silently dropping the instagram.com/embed.js request (both are
-// common on mobile browsers and out of this app's control), though a slow
-// network or Instagram itself failing to resolve a post would look
-// identical. Either way, silently blank is never acceptable, so each post
-// now falls back to a plain "view on Instagram" link if the real embed
-// hasn't appeared after a few seconds.
+// 2026-08-25: live testing found two distinct failure modes, both silent.
+// (1) The section can render completely blank -- likely a browser
+// tracking-protection setting or ad blocker silently dropping the
+// instagram.com/embed.js request (common on mobile). (2) Instagram *does*
+// swap the blockquote for an iframe (so a naive "did an iframe appear"
+// check reports success), but the iframe itself collapses to a sliver
+// with no visible content -- seen consistently across reel permalinks,
+// so the classic embed.js/blockquote method likely doesn't reliably
+// render Reels the way it does photo posts, or the iframe's own resize
+// postMessage gets blocked (e.g. third-party cookie restrictions). Either
+// way, checking the iframe actually rendered at a real height -- not just
+// that it exists -- is what catches case (2).
 function loadEmbedScript(onReady, onError) {
   if (window.instgrm) {
     onReady();
@@ -45,13 +51,25 @@ function InstagramPost({ post }) {
 
   useEffect(() => {
     let settled = false;
+    let settleTimer;
     const container = containerRef.current;
+
+    const checkIframeHeight = () => {
+      const iframe = container?.querySelector("iframe");
+      if (iframe && iframe.getBoundingClientRect().height >= MIN_RENDERED_HEIGHT) {
+        settled = true;
+        setShowFallback(false);
+      } else {
+        settled = true;
+        if (iframe) iframe.style.display = "none";
+        setShowFallback(true);
+      }
+    };
 
     const observer = new MutationObserver(() => {
       if (container?.querySelector("iframe")) {
-        settled = true;
-        setShowFallback(false);
-        observer.disconnect();
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(checkIframeHeight, IFRAME_SETTLE_MS);
       }
     });
     if (container) observer.observe(container, { childList: true });
@@ -67,6 +85,7 @@ function InstagramPost({ post }) {
 
     return () => {
       observer.disconnect();
+      clearTimeout(settleTimer);
       clearTimeout(fallbackTimer);
     };
   }, [post.permalink]);
