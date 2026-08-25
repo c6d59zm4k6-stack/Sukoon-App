@@ -8,6 +8,25 @@
   gap: 12px;
 }
 
+.library-screen__highlight-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--lavender-soft);
+  border-color: transparent;
+  font-size: 0.82rem;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.library-screen__highlight-icon {
+  width: 32px; height: 32px; flex-shrink: 0;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--indigo-mid);
+  display: flex; align-items: center; justify-content: center;
+}
+
 .library-screen__item {
   padding: 0;
   overflow: hidden;
