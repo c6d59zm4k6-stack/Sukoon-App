@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, Bell, ChevronDown, Download, MessageCircle, Mail, UtensilsCrossed } from "lucide-react";
+import { Heart, Bell, ChevronDown, Download, MessageCircle, Mail, UtensilsCrossed, ExternalLink } from "lucide-react";
 import TopBar from "../components/TopBar.jsx";
 import ProgressRing from "../components/ProgressRing.jsx";
 import { downloadPlanPdf } from "../utils/planPdf.js";
@@ -22,6 +22,7 @@ export default function Plan({ profile }) {
   const [expandedId, setExpandedId] = useState(
     () => phases.find((p) => p.status === "current")?.id
   );
+  const [expandedRecipeId, setExpandedRecipeId] = useState(null);
 
   const handleDownload = () => downloadPlanPdf(profile);
 
@@ -133,24 +134,59 @@ export default function Plan({ profile }) {
           <section>
             <h2 className="section-title">Recipes for You</h2>
             <div className="plan-screen__recipes">
-              {recipes.map((r) => (
-                <div className="card plan-screen__recipe" key={r.id}>
-                  <div className="plan-screen__recipe-icon"><UtensilsCrossed size={18} /></div>
-                  <div className="plan-screen__recipe-text">
-                    <strong>{r.name}</strong>
-                    <span>{r.summary}</span>
-                    <span className="plan-screen__recipe-why">{r.whyItHelps}</span>
+              {recipes.map((r) => {
+                const isRecipeOpen = expandedRecipeId === r.id;
+                return (
+                  <div className="card plan-screen__recipe" key={r.id}>
+                    <div className="plan-screen__recipe-top">
+                      <div className="plan-screen__recipe-icon"><UtensilsCrossed size={18} /></div>
+                      <div className="plan-screen__recipe-text">
+                        <strong>{r.name}</strong>
+                        <span>{r.summary}</span>
+                        <span className="plan-screen__recipe-why">{r.whyItHelps}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="plan-screen__recipe-view-btn"
+                      onClick={() => setExpandedRecipeId(isRecipeOpen ? null : r.id)}
+                    >
+                      {isRecipeOpen ? "Hide recipe" : "View recipe"}
+                      <ChevronDown size={14} className={"plan-screen__phase-chevron" + (isRecipeOpen ? " is-open" : "")} />
+                    </button>
+
+                    {isRecipeOpen && (
+                      <div className="plan-screen__recipe-details">
+                        <div>
+                          <strong>Ingredients</strong>
+                          <ul>
+                            {r.ingredients.map((ing) => <li key={ing}>{ing}</li>)}
+                          </ul>
+                        </div>
+                        <div>
+                          <strong>Steps</strong>
+                          <ol>
+                            {r.steps.map((step) => <li key={step}>{step}</li>)}
+                          </ol>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="plan-screen__recipe-actions">
+                      <a className="plan-screen__recipe-link" href={zomatoSearchUrl(r.dishQuery)} target="_blank" rel="noreferrer">
+                        <ExternalLink size={12} /> Search on Zomato
+                      </a>
+                      <a className="plan-screen__recipe-link" href={swiggySearchUrl(r.dishQuery)} target="_blank" rel="noreferrer">
+                        <ExternalLink size={12} /> Search on Swiggy
+                      </a>
+                    </div>
+                    <p className="plan-screen__recipe-caveat">
+                      Opens a search for "{r.dishQuery}" near you — not a guaranteed exact match, just a quick way to see what's around if you'd rather order than cook.
+                    </p>
                   </div>
-                  <div className="plan-screen__recipe-actions">
-                    <a className="plan-screen__recipe-link" href={zomatoSearchUrl(r.dishQuery)} target="_blank" rel="noreferrer">
-                      Find on Zomato
-                    </a>
-                    <a className="plan-screen__recipe-link" href={swiggySearchUrl(r.dishQuery)} target="_blank" rel="noreferrer">
-                      Find on Swiggy
-                    </a>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
