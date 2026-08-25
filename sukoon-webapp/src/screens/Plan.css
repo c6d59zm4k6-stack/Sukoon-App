@@ -340,9 +340,14 @@
 
 .plan-screen__recipe {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-screen__recipe-top {
+  display: flex;
   align-items: flex-start;
-  gap: 10px 12px;
+  gap: 10px;
 }
 
 .plan-screen__recipe-icon {
@@ -355,7 +360,7 @@
 
 .plan-screen__recipe-text {
   flex: 1;
-  min-width: 200px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -364,31 +369,74 @@
 .plan-screen__recipe-text span { font-size: 0.76rem; color: var(--ink-soft); line-height: 1.4; }
 .plan-screen__recipe-why { font-style: italic; }
 
-.plan-screen__recipe-actions {
+.plan-screen__recipe-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--indigo-mid);
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.plan-screen__recipe-details {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  flex-shrink: 0;
-  width: 100%;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--mist);
 }
-@media (min-width: 360px) {
-  .plan-screen__recipe-actions {
-    flex-direction: row;
-    width: auto;
-    margin-left: auto;
-  }
+.plan-screen__recipe-details strong {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--indigo-mid);
+  margin-bottom: 6px;
+}
+.plan-screen__recipe-details ul,
+.plan-screen__recipe-details ol {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.plan-screen__recipe-details li {
+  font-size: 0.82rem;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.plan-screen__recipe-actions {
+  display: flex;
+  gap: 8px;
 }
 
 .plan-screen__recipe-link {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 7px 12px;
+  gap: 5px;
+  padding: 7px 10px;
   border-radius: 999px;
-  border: 1.5px solid var(--lavender);
-  background: var(--lavender-soft);
-  color: var(--indigo-mid-deep);
-  font-size: 0.72rem;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 0.7rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.plan-screen__recipe-caveat {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
 }
