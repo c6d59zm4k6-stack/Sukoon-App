@@ -26,6 +26,32 @@ function resumeStageFor(profile) {
   return "app";
 }
 
+// 2026-08-26: onboarding completion, once reached, is now remembered
+// per-account in localStorage and trusted over a fresh database read for
+// ROUTING. Despite three separate real bugs already found and fixed in
+// this area (a silently-swallowed fetch error, a silently-swallowed save
+// error, and a missing required-name validation), an account that has
+// definitely reached Home before (confirmed: name visible right after
+// logging in) was still intermittently getting routed back to About You
+// on a fresh app open -- meaning some read-side inconsistency still
+// exists that hasn't been pinned down, and the person testing this
+// (rightly) does not want to keep being the live debugger for it. Rather
+// than chase another intermittent cause, this makes the failure mode
+// itself impossible: once this device has seen this account complete
+// onboarding, a fetch that *looks* incomplete is treated as a data-read
+// anomaly, not a real regression, and never routes backward. The fetched
+// profile is still used for what Home actually displays -- this only
+// changes what decides which SCREEN to show.
+function onboardingFlagKey(userId) {
+  return `sukoon_onboarded_${userId}`;
+}
+function markOnboardingComplete(userId) {
+  try { localStorage.setItem(onboardingFlagKey(userId), "1"); } catch { /* private mode etc -- fine, just no memory */ }
+}
+function hasCompletedOnboardingBefore(userId) {
+  try { return localStorage.getItem(onboardingFlagKey(userId)) === "1"; } catch { return false; }
+}
+
 // stage: "loading" | "splash" | "auth" | "account-error" | "about" | "journey" | "plan-quiz" | "app"
 export default function App() {
   const [stage, setStage] = useState("loading");
@@ -89,7 +115,13 @@ export default function App() {
     }
     const loaded = { ...p, tracking: t };
     setProfile(loaded);
-    setStage(resumeStageFor(loaded));
+    const resolved = resumeStageFor(loaded);
+    if (resolved !== "app" && hasCompletedOnboardingBefore(userId)) {
+      setStage("app"); // trust the milestone over this fetch -- see comment above
+      return;
+    }
+    if (resolved === "app") markOnboardingComplete(userId);
+    setStage(resolved);
   };
 
   const [saveError, setSaveError] = useState(false);
@@ -298,7 +330,10 @@ export default function App() {
             const journeys = profileRef.current.journeys.length ? profileRef.current.journeys : ["pcos"];
             const plan = buildFallbackPlan(journeys, {});
             setProfile((p) => ({ ...p, journeys, plan }));
-            if (await persistProfileFields({ journeys, plan })) setStage("app");
+            if (await persistProfileFields({ journeys, plan })) {
+              if (session?.user?.id) markOnboardingComplete(session.user.id);
+              setStage("app");
+            }
           }}
         />
       </div>
@@ -314,7 +349,10 @@ export default function App() {
           onBack={() => setStage("journey")}
           onContinue={async ({ answers, plan }) => {
             setProfile((p) => ({ ...p, quizAnswers: answers, plan }));
-            if (await persistProfileFields({ quizAnswers: answers, plan })) setStage("app");
+            if (await persistProfileFields({ quizAnswers: answers, plan })) {
+              if (session?.user?.id) markOnboardingComplete(session.user.id);
+              setStage("app");
+            }
           }}
         />
       </div>
